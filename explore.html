@@ -933,6 +933,7 @@ function categorizeChannel(ch) {
 
 const JARUBA_LOGOS = 'https://jaruba.github.io/channel-logos';
 const CUSTOM_LOGOS = {
+  // United States
   'fox': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-us.png',
   'fox news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-news-us.png',
   'fox business': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-business-us.png',
@@ -942,6 +943,10 @@ const CUSTOM_LOGOS = {
   'fox sports 1': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-1-us.png',
   'fox sports 2': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-2-us.png',
   'fox soccer plus': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-soccer-plus-us.png',
+  // Australia
+  'fox 8': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-8-au.png',
+  'fox funny': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-funny-au.png',
+  'fox hits': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-hits-au.png',
   'fox sports 501': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-cricket-501-au.png',
   'fox sports 501 cricket': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-cricket-501-au.png',
   'fox sports 502': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-league-502-au.png',
@@ -956,7 +961,83 @@ const CUSTOM_LOGOS = {
   'fox sports news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-news-au.png',
   'fox sports more plus': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-more-plus-au.png',
   'fox sports ultra hd': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-ultra-hd-au.png',
+  'fox sports regular': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-sports-regular-au.png',
+  'foxtel arts': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/foxtel-arts-au.png',
+  'foxtel one': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/foxtel-one-au.png',
+  'foxw': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/foxw-au.png',
+  // Argentina
+  'fox sports argentina': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/argentina/fox-sports-ar.png',
+  'fox sports 2 argentina': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/argentina/fox-sports-2-ar.png',
+  'fox sports 3': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/argentina/fox-sports-3-ar.png',
+  'fox sports premium argentina': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/argentina/fox-sports-premium-ar.png',
+  // Brazil
+  'fox sports 2 brasil': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/brazil/fox-sports-2-br.png',
+  // Canada
+  'fox sports racing': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/canada/fox-sports-racing-ca.png',
+  // Mexico
   'fox sports premium': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/mexico/fox-sports-premium-mx.png',
+  // United Kingdom
+  'fox uk': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/fox-uk.png',
+  'fox plus': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/fox-plus-uk.png',
+  // Germany
+  'fox germany': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/germany/fox-de.png',
+  'fix and foxi': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/germany/fix-and-foxi-de.png',
+  // Italy
+  'fox italy': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/italy/fox-it.png',
+  'fox life': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/italy/fox-life-it.png',
+  'fox crime': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/italy/fox-crime-it.png',
+  'fox comedy': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/italy/fox-comedy-it.png',
+  'fox plus italy': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/italy/fox-plus-it.png',
+  // Spain
+  'fox spain': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/spain/fox-es.png',
+  'fox life spain': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/spain/fox-life-es.png',
+  // Netherlands
+  'fox netherlands': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/netherlands/fox-nl.png',
+  // Portugal
+  'fox comedy portugal': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/portugal/fox-comedy-pt.png',
+  'fox crime portugal': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/portugal/fox-crime-pt.png',
+  'fox life portugal': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/portugal/fox-life-pt.png',
+  'fox movies': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/portugal/fox-movies-pt.png',
+  // Serbia
+  'fox serbia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/serbia/fox-rs.png',
+  'fox crime serbia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/serbia/fox-crime-rs.png',
+  'fox life serbia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/serbia/fox-life-rs.png',
+  'fox movies serbia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/serbia/fox-movies-rs.png',
+  // Croatia
+  'fox croatia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/fox-hr.png',
+  'fox crime croatia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/fox-crime-hr.png',
+  'fox life croatia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/fox-life-hr.png',
+  'fox movies croatia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/fox-movies-hr.png',
+  // Turkey
+  'fox turkey': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/turkey/fox-tr.png',
+  'fox crime turkey': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/turkey/fox-crime-tr.png',
+  // Ukraine
+  'fox ukraine': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/ukraine/fox-ua.png',
+  // South Africa
+  'fix and foxi south africa': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/south-africa/fix-and-foxi-za.png',
+  // Bulgaria
+  'fix and foxi bulgaria': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/bulgaria/fix-and-foxi-bg.png',
+  // Latin America
+  'fox channel': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-channel-lam.png',
+  'fox life latam': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-life-lam.png',
+  'fox premium': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-lam.png',
+  'fox premium action': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-action-lam.png',
+  'fox premium cinema': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-cinema-lam.png',
+  'fox premium classics': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-classics-lam.png',
+  'fox premium comedy': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-comedy-lam.png',
+  'fox premium family': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-family-lam.png',
+  'fox premium movies': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-movies-lam.png',
+  'fox premium series': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-premium-series-lam.png',
+  'fox sports 3': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-sports-3-lam.png',
+  'fox sports premium latam': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-latin-america/fox-sports-premium-lam.png',
+  // Asia
+  'fox sports asia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-asia/fox-sports-asi.png',
+  'fox sports 1 asia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-asia/fox-sports-1-asi.png',
+  'fox sports 2 asia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-asia/fox-sports-2-asi.png',
+  'fox sports 3 asia': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/world-asia/fox-sports-3-asi.png',
+  // International
+  'fox life international': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/fox-life-int.png',
+  'fix and foxi international': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/fix-and-foxi-int.png',
 };
 let channelLogoMap = {};
 
