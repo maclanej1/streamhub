@@ -1018,8 +1018,14 @@ function renderChannels() {
   el.innerHTML = html;
 }
 
+const CUSTOM_CHANNEL_URLS = {
+  'Fox Sports 502': 'https://ntvs.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb25ZVFVLZndZRmd5RjAzZXRNSmRYZEl4ZWp5bUlEUmdaNm83QWhFZ2ZscnA1RTJoaWFVaWRCaHM0V1JjaUcvV2VoZkJ1SmlYbEZWWjZ0UWlESVZSTHlRPT0~',
+};
+
 function openTVChannel(name, code) {
   const decoded = decodeURIComponent(name);
+  const custom = CUSTOM_CHANNEL_URLS[decoded];
+  if (custom) { openPlayer(custom, decoded, 'Live TV'); return; }
   const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
   openPlayer(url, decoded, 'Live TV');
 }
