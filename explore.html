@@ -932,6 +932,9 @@ function categorizeChannel(ch) {
 }
 
 const JARUBA_LOGOS = 'https://jaruba.github.io/channel-logos';
+const CUSTOM_LOGOS = {
+  '502': 'https://logotyp.us/file/fox-league.svg',
+};
 let channelLogoMap = {};
 
 async function loadTVChannels() {
@@ -955,6 +958,7 @@ async function loadTVChannels() {
 }
 
 function channelLogo(ch) {
+  if (CUSTOM_LOGOS[ch.code]) return CUSTOM_LOGOS[ch.code];
   const path = channelLogoMap[ch.name.toLowerCase()];
   if (path) return `${JARUBA_LOGOS}/export/transparent-color${path}`;
   return ch.image || null;
