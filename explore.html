@@ -211,23 +211,60 @@
   .sport-card .match-info .tag.upcoming { background: rgba(59,130,246,0.15); color: var(--blue); }
   .sport-card .match-info .tag.finished { background: rgba(34,197,94,0.15); color: var(--green); }
 
-  .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-  .channel-card { background: var(--card-bg); border-radius: var(--radius); padding: 14px 10px; border: 1px solid var(--border); text-align: center; cursor: pointer; transition: var(--transition); }
-  .channel-card:hover { border-color: rgba(255,255,255,0.1); background: var(--surface); transform: translateY(-2px); }
-  .channel-card .ch-logo { width: 60px; height: 60px; margin: 0 auto 8px; border-radius: 8px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: var(--text2); overflow: hidden; }
-  .channel-card .ch-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
-  .channel-card .ch-name { font-size: 12px; font-weight: 600; }
-  .channel-card .ch-status { font-size: 10px; margin-top: 4px; }
+  .tv-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .tv-header h2 { font-size: 22px; font-weight: 700; }
+  .tv-header .sub { font-size: 13px; color: var(--text2); }
+  .tv-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .tv-controls .tv-search { flex: 1; min-width: 200px; display: flex; gap: 8px; }
+  .tv-controls .tv-search input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; transition: var(--transition); }
+  .tv-controls .tv-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+  .tv-controls .tv-search button { padding: 10px 18px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; transition: var(--transition); white-space: nowrap; }
+  .tv-controls .tv-search button:hover { background: var(--accent-hover); }
+  .tv-country-pills { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; -webkit-overflow-scrolling: touch; margin-bottom: 4px; }
+  .tv-country-pills::-webkit-scrollbar { height: 3px; }
+  .tv-country-pills .pill { flex-shrink: 0; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; font-size: 11px; font-weight: 600; transition: var(--transition); text-transform: uppercase; letter-spacing: 0.04em; }
+  .tv-country-pills .pill:hover { border-color: var(--accent); color: var(--text); }
+  .tv-country-pills .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  .channel-card {
+    background: var(--card-bg); border-radius: var(--radius-lg);
+    padding: 20px 14px 16px; border: 1px solid var(--border);
+    text-align: center; cursor: pointer; transition: var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .channel-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+  }
+  .channel-card .ch-logo {
+    width: 72px; height: 72px; margin: 0 auto 10px;
+    border-radius: 12px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700; color: var(--text2);
+    overflow: hidden; transition: var(--transition);
+  }
+  .channel-card:hover .ch-logo { transform: scale(1.06); }
+  .channel-card .ch-logo img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+  .channel-card .ch-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .channel-card .ch-status { font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px; }
   .channel-card .ch-status.online { color: var(--green); }
-  .channel-card .ch-status.offline { color: var(--text2); }
+  .channel-card .ch-status.online .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; animation: live-pulse 1.5s ease-in-out infinite; }
+  @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .channel-card .ch-status.offline { color: var(--text3); }
+  .channel-card .ch-status .country-tag { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-left: 4px; }
+  .channel-card .ch-online-bg {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green), #4ade80);
+  }
+  .channel-card .ch-category { font-size: 10px; color: var(--text3); margin-top: 4px; }
 
   .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
   .filters .pill { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; font-size: 12px; font-weight: 600; transition: var(--transition); }
   .filters .pill:hover { border-color: var(--accent); color: var(--text); }
   .filters .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .filters .count { font-size: 12px; color: var(--text2); margin-left: auto; }
-
-  .country-code { font-size: 10px; color: var(--text2); text-transform: uppercase; }
 
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .card:focus-visible, .sport-card:focus-visible, .channel-card:focus-visible {
@@ -396,17 +433,19 @@
 </div>
 
 <div class="section" id="section-livetv">
-  <div class="section-header">
-    <h2>Live TV</h2>
-    <span class="sub" id="channel-count">Loading channels...</span>
+  <div class="tv-header">
+    <div>
+      <h2>Live TV</h2>
+      <span class="sub" id="channel-count">Loading channels...</span>
+    </div>
   </div>
-  <div class="search-bar" style="margin-bottom:16px;">
-    <input type="text" id="tv-search-input" placeholder="Search channels..." onkeydown="if(event.key==='Enter') filterChannels()">
-    <select id="tv-country-select">
-      <option value="all">All Countries</option>
-    </select>
-    <button onclick="filterChannels()">Filter</button>
+  <div class="tv-controls">
+    <div class="tv-search">
+      <input type="text" id="tv-search-input" placeholder="Search channels..." onkeydown="if(event.key==='Enter') filterChannels()">
+      <button onclick="filterChannels()">Search</button>
+    </div>
   </div>
+  <div class="tv-country-pills" id="tv-country-pills"></div>
   <div id="tv-content"><div class="loading"><div class="spinner"></div><span>Loading channels...</span></div></div>
 </div>
 
@@ -840,17 +879,23 @@ async function loadTVChannels() {
     const data = await r.json();
     allChannels = data.channels || [];
     const countries = [...new Set(allChannels.map(c => c.code).filter(Boolean))].sort();
-    const sel = document.getElementById('tv-country-select');
-    sel.innerHTML = '<option value="all">All Countries</option>';
-    for (const code of countries) sel.innerHTML += `<option value="${code}">${code.toUpperCase()}</option>`;
+    const pills = document.getElementById('tv-country-pills');
+    pills.innerHTML = `<span class="pill active" data-code="all" onclick="setCountryPill('all',this)">All</span>`;
+    for (const code of countries) pills.innerHTML += `<span class="pill" data-code="${code}" onclick="setCountryPill('${code}',this)">${code.toUpperCase()}</span>`;
     document.getElementById('channel-count').textContent = `${allChannels.length} channels`;
     renderChannels();
   } catch (e) { el.innerHTML = `<div class="empty-state"><h3>Failed to load channels</h3><p>${e.message}</p></div>`; }
 }
 
+function setCountryPill(code, el) {
+  document.querySelectorAll('#tv-country-pills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  tvFilterCountry = code;
+  renderChannels();
+}
+
 function filterChannels() {
   tvFilterText = document.getElementById('tv-search-input').value.trim().toLowerCase();
-  tvFilterCountry = document.getElementById('tv-country-select').value;
   renderChannels();
 }
 
@@ -863,16 +908,15 @@ function renderChannels() {
   });
   if (!filtered.length) { el.innerHTML = '<div class="empty-state"><h3>No channels found</h3><p>Try a different search</p></div>'; return; }
   let html = '<div class="channel-grid">';
-  filtered.sort((a, b) => (a.status === 'online' ? 0 : 1) - (b.status === 'online' ? 0 : 1));
+  filtered.sort((a, b) => (a.status === 'online' ? -1 : 1) - (b.status === 'online' ? -1 : 1));
   for (const ch of filtered.slice(0, 200)) {
-    const cfavKey = 'ch-' + ch.code + '-' + ch.name.replace(/[^a-zA-Z0-9]/g,'');
-    const cIsFav = isFavorite(cfavKey);
-    const cNameClean = ch.name.replace(/'/g,'');
+    const online = ch.status === 'online';
     html += `<div class="channel-card" tabindex="0" role="button" onclick="openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')">
+      ${online ? '<div class="ch-online-bg"></div>' : ''}
       <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.closest('.ch-logo').innerHTML='${ch.name[0].replace(/'/g,"")}'">` : ch.name[0]}</div>
-      <div class="ch-name">${ch.name} <button class="fav-btn ${cIsFav?'active':''}" onclick="event.stopPropagation();toggleFavorite('${cfavKey}','${cNameClean}',{type:'ch',code:'${ch.code}'});this.classList.toggle('active')">${cIsFav?'★':'☆'}</button></div>
-      <div class="ch-status ${ch.status === 'online' ? 'online' : 'offline'}">${ch.status === 'online' ? '● LIVE' : '○ Offline'}</div>
-      <div class="country-code">${ch.code?.toUpperCase()}</div>
+      <div class="ch-name">${ch.name}</div>
+      <div class="ch-status ${online ? 'online' : 'offline'}">${online ? '<span class="live-dot"></span> LIVE' : 'Offline'} <span class="country-tag">${ch.code?.toUpperCase() || ''}</span></div>
+      <div class="ch-category">${ch.type || ch.category || ''}</div>
     </div>`;
   }
   html += '</div>';
