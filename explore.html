@@ -931,11 +931,18 @@ function categorizeChannel(ch) {
   return 'general';
 }
 
+const JARUBA_LOGOS = 'https://jaruba.github.io/channel-logos';
+let channelLogoMap = {};
+
 async function loadTVChannels() {
   const el = document.getElementById('tv-content');
   el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading channels...</span></div>';
   try {
-    const r = await fetch(`${CDNTV}/channels/?user=cdnlivetv&plan=free`);
+    const [r, logoR] = await Promise.all([
+      fetch(`${CDNTV}/channels/?user=cdnlivetv&plan=free`),
+      fetch(`${JARUBA_LOGOS}/logo_paths.json`).then(r => r.json()).catch(() => ({})),
+    ]);
+    channelLogoMap = logoR;
     const data = await r.json();
     allChannels = data.channels || [];
     const countries = [...new Set(allChannels.map(c => c.code).filter(Boolean))].sort();
@@ -945,6 +952,12 @@ async function loadTVChannels() {
     document.getElementById('channel-count').textContent = `${allChannels.length} channels`;
     renderChannels();
   } catch (e) { el.innerHTML = `<div class="empty-state"><h3>Failed to load channels</h3><p>${e.message}</p></div>`; }
+}
+
+function channelLogo(ch) {
+  const path = channelLogoMap[ch.name.toLowerCase()];
+  if (path) return `${JARUBA_LOGOS}/export/transparent-color${path}`;
+  return ch.image || null;
 }
 
 function setCountryPill(code, el) {
@@ -962,17 +975,18 @@ function filterChannels() {
 function renderChannelCard(ch, compact) {
   const online = ch.status === 'online';
   const name = ch.name.replace(/'/g,'');
+  const logo = channelLogo(ch);
   const onclick = `openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')`;
   if (compact) {
     return `<div class="tv-card" tabindex="0" role="button" onclick="${onclick}">
       ${online ? '<span class="tv-online-badge">LIVE</span>' : ''}
-      <div class="tv-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.closest('.tv-logo').innerHTML='${name[0]}'">` : name[0]}</div>
+      <div class="tv-logo">${logo ? `<img src="${logo}" alt="${ch.name}" loading="lazy" onerror="this.closest('.tv-logo').innerHTML='${name[0]}'">` : name[0]}</div>
       <div class="tv-name">${ch.name}</div>
       <div class="tv-status ${online ? 'online' : 'offline'}">${online ? '<span class="live-dot"></span> LIVE' : 'Offline'}</div>
     </div>`;
   }
   return `<div class="channel-card" tabindex="0" role="button" onclick="${onclick}">
-    <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.closest('.ch-logo').innerHTML='${name[0]}'">` : name[0]}</div>
+    <div class="ch-logo">${logo ? `<img src="${logo}" alt="${ch.name}" loading="lazy" onerror="this.closest('.ch-logo').innerHTML='${name[0]}'">` : name[0]}</div>
     <div class="ch-name">${ch.name}</div>
     <div class="ch-code">${ch.code?.toUpperCase() || ''}</div>
   </div>`;
