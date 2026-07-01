@@ -755,7 +755,10 @@ async function movieSearch() {
 const MEDIA_SERVERS = [
   { name: 'VidSync',   movie: id => `https://vidsync.live/embed/movie/${id}?autoPlay=true`,            tv: (id,s,e) => `https://vidsync.live/embed/tv/${id}/${s}/${e}?autoPlay=true&autoNext=true`, quality: '1080p' },
   { name: 'VidSrc',    movie: id => `https://vidsrc.to/embed/movie/${id}`,                            tv: (id,s,e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,                          quality: '1080p' },
-  { name: 'Embed API', movie: id => `https://player.embed-api.stream/?id=${id}`,                      tv: (id,s,e) => `https://player.embed-api.stream/?id=${id}&s=${s}&e=${e}`,                quality: '4K' },
+  { name: 'VidSrc FYI',movie: id => `https://vidsrc.fyi/embed/movie/${id}`,                           tv: (id,s,e) => `https://vidsrc.fyi/embed/tv/${id}/${s}/${e}`,                          quality: '1080p' },
+  { name: 'VidCore',   movie: id => `https://www.vidcore.org/embed/movie/${id}`,                      tv: (id,s,e) => `https://www.vidcore.org/embed/tv/${id}/${s}/${e}`,                     quality: '4K' },
+  { name: 'VidSrc PM', movie: id => `https://vidsrc.pm/embed/movie/${id}`,                            tv: (id,s,e) => `https://vidsrc.pm/embed/tv/${id}/${s}/${e}`,                           quality: '1080p' },
+  { name: '2Embed',    movie: id => `https://2embed.skin/embed/movie/${id}`,                          tv: (id,s,e) => `https://2embed.skin/embed/tv/${id}/${s}/${e}`,                         quality: '1080p' },
   { name: 'Embed SU',  movie: id => `https://embed.su/embed/movie/${id}`,                            tv: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}`,                                 quality: '1080p' },
 ];
 
