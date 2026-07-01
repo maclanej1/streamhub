@@ -229,6 +229,21 @@
 
   .country-code { font-size: 10px; color: var(--text2); text-transform: uppercase; }
 
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card:focus-visible, .sport-card:focus-visible, .channel-card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 2px var(--accent), 0 12px 32px rgba(0,0,0,0.5);
+  }
+  [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .fav-btn {
+    background: none; border: none; cursor: pointer; font-size: 15px;
+    padding: 2px 6px; transition: var(--transition); opacity: 0.3;
+    line-height: 1; color: var(--text);
+  }
+  .fav-btn:hover { opacity: 0.8; }
+  .fav-btn.active { opacity: 1; color: var(--accent); }
+
   .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 16px; }
   .modal-overlay.show { display: flex; }
   .modal-player { width: 100%; max-width: 960px; background: #000; border-radius: 12px; overflow: hidden; position: relative; }
@@ -238,6 +253,38 @@
   .modal-player .player-info { padding: 14px 18px; background: var(--surface); }
   .modal-player .player-info h3 { font-size: 16px; }
   .modal-player .player-info p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .stream-picker { display: none; position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px; }
+  .stream-picker.show { display: flex; }
+  .stream-picker-inner { background: var(--surface); border-radius: var(--radius-lg); max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px; }
+  .stream-picker-inner h3 { font-size: 17px; margin-bottom: 4px; }
+  .stream-picker-inner .sp-sub { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .stream-picker-inner .close-sp { float: right; background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; padding: 0 4px; transition: var(--transition); }
+  .stream-picker-inner .close-sp:hover { color: var(--text); }
+  .stream-picker-inner .stream-opt { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); cursor: pointer; transition: var(--transition); margin-bottom: 6px; font-size: 13px; }
+  .stream-picker-inner .stream-opt:hover { border-color: var(--accent); background: var(--surface2); }
+  .stream-picker-inner .stream-opt .hd-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--accent-muted); color: var(--accent); }
+  .stream-picker-inner .stream-opt .sd-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(156,163,175,0.15); color: var(--text2); }
+  .stream-picker-inner .stream-opt .src-name { font-size: 11px; color: var(--text2); }
+
+  .fav-tray { margin-bottom: 24px; }
+  .fav-tray .fav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .fav-tray .fav-header h2 { font-size: 18px; font-weight: 700; }
+  .fav-tray .fav-header .clear-favs { font-size: 12px; color: var(--text2); cursor: pointer; background: none; border: none; transition: var(--transition); }
+  .fav-tray .fav-header .clear-favs:hover { color: var(--accent); }
+  .fav-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 8px; scroll-snap-type: x mandatory; }
+  .fav-scroll .fav-chip {
+    flex-shrink: 0; scroll-snap-align: start;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 20px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    cursor: pointer; transition: var(--transition);
+    font-size: 13px; font-weight: 500;
+  }
+  .fav-scroll .fav-chip:hover { border-color: var(--accent); background: var(--surface); }
+  .fav-scroll .fav-chip .fav-remove { font-size: 14px; opacity: 0.3; transition: var(--transition); margin-left: 4px; }
+  .fav-scroll .fav-chip .fav-remove:hover { opacity: 1; color: var(--accent); }
+  .fav-scroll .fav-chip .fav-icon { font-size: 16px; }
 
   .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 20px; color: var(--text2); }
   .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
@@ -368,11 +415,20 @@
 <div class="modal-overlay" id="playerModal">
   <div class="modal-player">
     <button class="close-btn" onclick="closePlayer()">&times;</button>
-    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
     <div class="player-info">
       <h3 id="playerTitle">Now Playing</h3>
       <p id="playerDesc"></p>
     </div>
+  </div>
+</div>
+
+<div class="stream-picker" id="streamPicker">
+  <div class="stream-picker-inner">
+    <button class="close-sp" onclick="closeStreamPicker()">&times;</button>
+    <h3 id="sp-title">Select Stream</h3>
+    <div class="sp-sub" id="sp-sub"></div>
+    <div id="sp-list"></div>
   </div>
 </div>
 
@@ -406,10 +462,71 @@ document.querySelectorAll('.nav a').forEach(a => {
   });
 });
 
+// ════════════════════════════════════════════
+// FAVORITES (localStorage)
+// ════════════════════════════════════════════
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('sh_favs')) || []; } catch { return []; }
+}
+function saveFavorites(f) { localStorage.setItem('sh_favs', JSON.stringify(f)); }
+function isFavorite(id) { return getFavorites().some(f => f.id === id); }
+function toggleFavorite(id, name, extra) {
+  let favs = getFavorites();
+  const idx = favs.findIndex(f => f.id === id);
+  if (idx > -1) { favs.splice(idx, 1); } else { favs.push({ id, name, ...extra }); }
+  saveFavorites(favs);
+  renderFavTray();
+  return idx === -1;
+}
+
+// ════════════════════════════════════════════
+// KEYBOARD / TV REMOTE NAVIGATION
+// ════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('streamPicker').classList.contains('show')) closeStreamPicker();
+    else if (document.getElementById('playerModal').classList.contains('show')) closePlayer();
+  }
+  if (e.key === 'Enter') {
+    const el = document.activeElement;
+    if (el && el.click) el.click();
+  }
+  // Arrow key horizontal scroll for focused tray
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const el = document.activeElement;
+    const scroll = el?.closest('.tray-scroll, .fav-scroll');
+    if (scroll) { scroll.scrollBy({ left: e.key === 'ArrowLeft' ? -200 : 200, behavior: 'smooth' }); e.preventDefault(); }
+  }
+});
+
 let heroItem = null;
 let currentCategory = '';
 let currentCategoryTitle = '';
 let categoryPage = 1;
+
+function renderFavTray() {
+  const favs = getFavorites();
+  const el = document.getElementById('fav-tray');
+  if (!el) return;
+  if (!favs.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  let html = `<div class="fav-tray"><div class="fav-header"><h2>★ Favorites</h2><button class="clear-favs" onclick="if(confirm('Clear all favorites?')){saveFavorites([]);renderFavTray();}">Clear All</button></div><div class="fav-scroll">`;
+  for (const f of favs) {
+    if (f.type === 'ch') {
+      html += `<div class="fav-chip" onclick="openTVChannel('${encodeURIComponent(f.name)}','${f.code}')" tabindex="0" role="button">
+        <span class="fav-icon">📺</span><span>${f.name}</span>
+        <span class="fav-remove" onclick="event.stopPropagation();toggleFavorite('${f.id}','${f.name.replace(/'/g,'')}');renderFavTray()">✕</span>
+      </div>`;
+    } else if (f.type === 'tm') {
+      html += `<div class="fav-chip" onclick="openSportStream('${f.id}')" tabindex="0" role="button">
+        <span class="fav-icon">⚽</span><span>${f.name}</span>
+        <span class="fav-remove" onclick="event.stopPropagation();toggleFavorite('${f.id}','${f.name.replace(/'/g,'')}');renderFavTray()">✕</span>
+      </div>`;
+    }
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
 
 async function loadMovieHome() {
   const trays = document.getElementById('movie-trays');
@@ -426,7 +543,7 @@ async function loadMovieHome() {
 
     if (trending.results?.length) renderHero(trending.results[0]);
 
-    let html = '';
+    let html = '<div id="fav-tray"></div>';
     if (trending.results?.length) html += renderTray('Trending This Week', trending.results.slice(0, 20), 'trending');
     if (movies.results?.length) html += renderTray('Popular Movies', movies.results.slice(0, 20), 'movie');
     if (tv.results?.length) html += renderTray('Popular TV Shows', tv.results.slice(0, 20), 'tv');
@@ -441,6 +558,7 @@ async function loadMovieHome() {
     } catch(e) {}
 
     trays.innerHTML = html;
+    renderFavTray();
   } catch (e) {
     trays.innerHTML = `<div class="empty-state"><h3>Error loading</h3><p>${e.message}</p></div>`;
   }
@@ -481,7 +599,7 @@ function renderCard(item) {
   const type = item.media_type || (item.title ? 'movie' : 'tv');
   const poster = tmdbImage(item.poster_path, 'w342');
   const id = item.id;
-  return `<div class="card" onclick="openMedia('${type}','${id}','${encodeURIComponent(title)}')">
+  return `<div class="card" tabindex="0" role="button" onclick="openMedia('${type}','${id}','${encodeURIComponent(title)}')">
     <div class="card-poster">
       ${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:32px;">🎬</div>'}
       <div class="card-overlay"><div class="play-icon">▶</div></div>
@@ -640,7 +758,10 @@ function renderSports() {
     const st = isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'FINISHED';
     const sName = sportCategories.find(s => s.id === m.category)?.name || m.category;
     const posterPath = m.poster ? `${STREAMED}${m.poster}` : null;
-    html += `<div class="sport-card" onclick="openSportStream('${m.id}')">
+    const sfavId = 'tm-' + m.id;
+    const sIsFav = isFavorite(sfavId);
+    const sTitle = (m.title || (m.teams?.home?.name||'?') + ' vs ' + (m.teams?.away?.name||'?')).replace(/'/g,'');
+    html += `<div class="sport-card" tabindex="0" role="button" onclick="openSportStream('${m.id}')">
       ${posterPath ? `<div class="sport-bg" style="background-image:url('${posterPath}')"></div>` : ''}
       <div class="sport-content">
         <div class="teams">
@@ -649,6 +770,7 @@ function renderSports() {
           <div class="vs">vs</div>
           ${m.teams?.away ? `<div class="badge-img">${m.teams.away.badge ? `<img src="${STREAMED}/api/images/proxy/${m.teams.away.badge}.webp" alt="" loading="lazy" onerror="this.closest('.badge-img').innerHTML='${m.teams.away.name[0].replace(/'/g,'')}'">` : m.teams.away.name[0]}</div>` : ''}
           <div class="team-name">${m.teams?.away?.name || '?'}</div>
+          <button class="fav-btn ${sIsFav?'active':''}" onclick="event.stopPropagation();toggleFavorite('${sfavId}','${sTitle}',{type:'tm'});this.classList.toggle('active')">${sIsFav?'★':'☆'}</button>
         </div>
         <div class="match-info">
           <span class="tag ${sc}">${st}</span><span>${sName}</span><span> · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
@@ -664,13 +786,46 @@ function renderSports() {
 async function openSportStream(matchId) {
   const match = allMatches.find(m => m.id === matchId);
   if (!match || !match.sources?.length) return;
-  const src = match.sources[0];
-  try {
-    const r = await fetch(`${STREAMED}/api/stream/${src.source}/${src.id}`);
-    const streams = await r.json();
-    if (streams.length > 0) openPlayer(streams[0].embedUrl, match.title, `${streams[0].language} · ${streams[0].hd ? 'HD' : 'SD'}`);
-  } catch (e) { alert('Could not load stream'); }
+  // Fetch all streams from all sources in parallel
+  const results = await Promise.allSettled(
+    match.sources.map(src =>
+      fetch(`${STREAMED}/api/stream/${src.source}/${src.id}`).then(r => r.json()).then(arr => arr.map(s => ({ ...s, sourceLabel: src.source })))
+    )
+  );
+  let allStreams = [];
+  for (const r of results) { if (r.status === 'fulfilled') allStreams.push(...r.value); }
+  if (!allStreams.length) { alert('No streams available'); return; }
+  // Sort: HD first, then by stream number
+  allStreams.sort((a, b) => {
+    if (a.hd !== b.hd) return a.hd ? -1 : 1;
+    return (a.streamNo || 0) - (b.streamNo || 0);
+  });
+  // If only one option, play directly
+  if (allStreams.length === 1) {
+    openPlayer(allStreams[0].embedUrl, match.title, `${allStreams[0].hd ? 'HD' : 'SD'} · ${allStreams[0].sourceLabel}`);
+    return;
+  }
+  // Show picker
+  const title = match.title || `${match.teams?.home?.name || '?'} vs ${match.teams?.away?.name || '?'}`;
+  document.getElementById('sp-title').textContent = title;
+  document.getElementById('sp-sub').textContent = `${allStreams.length} streams available`;
+  let listHtml = '';
+  for (const s of allStreams) {
+    const label = s.hd ? `<span class="hd-badge">HD</span>` : `<span class="sd-badge">SD</span>`;
+    const srcLabel = s.sourceLabel || s.source || 'stream';
+    listHtml += `<button class="stream-opt" onclick="openPlayer('${s.embedUrl}','${title.replace(/'/g,'')}','${s.hd ? 'HD' : 'SD'} · ${srcLabel}');closeStreamPicker()">
+      <span>${srcLabel} #${s.streamNo || 1} ${s.hd ? 'HD' : 'SD'}</span>
+      ${label}
+    </button>`;
+  }
+  document.getElementById('sp-list').innerHTML = listHtml;
+  document.getElementById('streamPicker').classList.add('show');
 }
+
+function closeStreamPicker() {
+  document.getElementById('streamPicker').classList.remove('show');
+}
+document.getElementById('streamPicker').addEventListener('click', function(e) { if (e.target === this) closeStreamPicker(); });
 
 const CDNTV = 'https://api.cdnlivetv.tv/api/v1';
 let allChannels = [];
@@ -710,9 +865,12 @@ function renderChannels() {
   let html = '<div class="channel-grid">';
   filtered.sort((a, b) => (a.status === 'online' ? 0 : 1) - (b.status === 'online' ? 0 : 1));
   for (const ch of filtered.slice(0, 200)) {
-    html += `<div class="channel-card" onclick="openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')">
+    const cfavKey = 'ch-' + ch.code + '-' + ch.name.replace(/[^a-zA-Z0-9]/g,'');
+    const cIsFav = isFavorite(cfavKey);
+    const cNameClean = ch.name.replace(/'/g,'');
+    html += `<div class="channel-card" tabindex="0" role="button" onclick="openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')">
       <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.closest('.ch-logo').innerHTML='${ch.name[0].replace(/'/g,"")}'">` : ch.name[0]}</div>
-      <div class="ch-name">${ch.name}</div>
+      <div class="ch-name">${ch.name} <button class="fav-btn ${cIsFav?'active':''}" onclick="event.stopPropagation();toggleFavorite('${cfavKey}','${cNameClean}',{type:'ch',code:'${ch.code}'});this.classList.toggle('active')">${cIsFav?'★':'☆'}</button></div>
       <div class="ch-status ${ch.status === 'online' ? 'online' : 'offline'}">${ch.status === 'online' ? '● LIVE' : '○ Offline'}</div>
       <div class="country-code">${ch.code?.toUpperCase()}</div>
     </div>`;
