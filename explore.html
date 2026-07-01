@@ -358,7 +358,7 @@
 <body>
 
 <nav class="nav">
-  <div class="logo">Stream<span>Hub</span></div>
+  <div class="logo" onclick="switchSection('movies')" style="cursor:pointer">Stream<span>Hub</span></div>
   <a href="#" class="active" data-section="movies">Movies & TV</a>
   <a href="#" data-section="sports">Sports</a>
   <a href="#" data-section="livetv">Live TV</a>
@@ -490,14 +490,18 @@ function tmdbImage(path, size='w500') {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
 }
 
+function switchSection(name) {
+  document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+  document.querySelector('.nav a[data-section="' + name + '"]')?.classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.getElementById('movie-nav-right').style.display = name === 'movies' ? 'flex' : 'none';
+}
+
 document.querySelectorAll('.nav a').forEach(a => {
   a.addEventListener('click', e => {
     e.preventDefault();
-    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
-    a.classList.add('active');
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('section-' + a.dataset.section).classList.add('active');
-    document.getElementById('movie-nav-right').style.display = a.dataset.section === 'movies' ? 'flex' : 'none';
+    switchSection(a.dataset.section);
   });
 });
 
