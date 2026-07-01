@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pit Board — Motorsport Calendar</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --surface3: #0f1729;
+    --border: #1e2d3d;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --accent: #f59e0b;
+    --accent2: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --gray: #6b7280;
+    --tag-bg: rgba(245,158,11,0.12);
+    --tag-text: #fbbf24;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .container { max-width: 1200px; margin:0 auto; padding:16px; }
+
+  /* Header */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo svg { width: 32px; height: 32px; }
+  .logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .logo small { font-size: 11px; color: var(--text2); font-weight: 400; margin-left: 8px; }
+  .header-info { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--text2); }
+
+  /* Controls */
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 16px 0;
+    align-items: center;
+  }
+  .controls .count { font-size: 13px; color: var(--text2); margin-left: auto; }
+  .series-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+    cursor: pointer; transition: all .15s;
+  }
+  .filter-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .view-toggle {
+    display: flex; gap: 2px;
+    background: var(--surface); border-radius: 6px; padding: 2px;
+  }
+  .view-btn {
+    padding: 5px 10px; font-size: 12px; border: none; background: transparent;
+    color: var(--text2); cursor: pointer; border-radius: 4px; font-weight: 600;
+  }
+  .view-btn.active { background: var(--surface2); color: var(--text); }
+
+  /* Events Layout */
+  .events { padding: 8px 0 40px; }
+  .day-group { margin-bottom: 16px; }
+  .day-label {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; margin-bottom: 8px;
+    font-size: 14px; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .day-label .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
+  .day-label .date-range { font-weight: 400; color: var(--gray); font-size: 12px; }
+
+  /* Card - clickable */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .card:hover { border-color: var(--accent2); background: var(--surface2); }
+  .card .date-box {
+    min-width: 50px; text-align: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--surface3);
+    flex-shrink: 0;
+  }
+  .card .date-box .day { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  .card .date-box .month { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card .info { flex: 1; min-width: 0; }
+  .card .info .series-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    background: var(--tag-bg); color: var(--tag-text);
+  }
+  .card .info .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .info .detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .card .session-dots { display: flex; gap: 3px; margin-top: 4px; }
+  .card .session-dots .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gray);
+  }
+  .card .session-dots .dot.done { background: var(--green); }
+  .card .session-dots .dot.live { background: var(--red); animation: pulse 1.5s infinite; }
+  .card .session-dots .dot.upcoming { background: var(--accent2); }
+  .card .time {
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+    text-align: right;
+    color: var(--accent2); flex-shrink: 0;
+  }
+  .card .time .label { display: block; font-size: 10px; font-weight: 400; color: var(--text2); }
+  .card .follow-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all .15s; flex-shrink: 0;
+  }
+  .card .follow-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .card .follow-btn.following { background: var(--accent); color: #000; border-color: var(--accent); }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+  /* Event Detail Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; max-width: 640px; width: 100%;
+    margin-top: 20px; margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .modal-header .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: none; background: var(--surface2); color: var(--text2);
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-header .close-btn:hover { background: var(--border); color: var(--text); }
+  .modal-header .m-series-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 4px; margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .modal-header h2 { font-size: 20px; font-weight: 700; }
+  .modal-header .m-venue { font-size: 13px; color: var(--text2); margin-top: 4px; }
+  .modal-header .m-date-range { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  .modal-body { padding: 16px 24px 24px; }
+  .modal-body .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text2); margin: 16px 0 8px;
+  }
+  .modal-body .section-title:first-child { margin-top: 0; }
+
+  /* Session rows in modal */
+  .session-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--surface3);
+    margin-bottom: 4px;
+    transition: all .15s;
+  }
+  .session-row:hover { background: var(--surface2); }
+  .session-row .s-indicator {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--gray);
+  }
+  .session-row .s-indicator.completed { background: var(--green); }
+  .session-row .s-indicator.live { background: var(--red); animation: pulse 1.5s infinite; }
+  .session-row .s-indicator.upcoming { background: var(--accent2); }
+  .session-row .s-name { flex: 1; font-size: 13px; font-weight: 600; }
+  .session-row .s-time { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .session-row .s-status {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .session-row .s-status.completed { color: var(--green); background: rgba(34,197,94,0.1); }
+  .session-row .s-status.live { color: var(--red); background: rgba(239,68,68,0.1); }
+  .session-row .s-status.upcoming { color: var(--accent2); background: rgba(59,130,246,0.1); }
+
+  /* Results table */
+  .results-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+  .results-table th {
+    text-align: left; padding: 6px 8px; font-size: 10px; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .results-table td { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .results-table tr:hover td { background: var(--surface2); }
+  .results-table .pos { width: 28px; font-weight: 700; color: var(--accent); }
+  .results-table .driver { font-weight: 600; }
+  .results-table .team { color: var(--text2); }
+  .results-table .top3 { color: var(--accent2); }
+
+  /* Others */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 16px; }
+  .empty h3 { font-size: 16px; margin-bottom: 6px; }
+  .empty p { font-size: 13px; }
+  .loading {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 60px 20px; color: var(--text2);
+  }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-bar {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 10px 0; font-size: 12px; color: var(--text2);
+    border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .status-bar .indicator { display: flex; align-items: center; gap: 4px; }
+  .status-bar .indicator .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .badge-est {
+    font-size: 9px; background: rgba(251,191,36,0.1); color: var(--accent);
+    padding: 1px 6px; border-radius: 3px; font-weight: 600;
+  }
+
+  @media (max-width: 640px) {
+    header { flex-direction: column; align-items: flex-start; }
+    .header-info { font-size: 12px; }
+    .card { flex-wrap: wrap; padding: 12px; }
+    .card .date-box { min-width: 40px; }
+    .card .date-box .day { font-size: 15px; }
+    .card .info .name { font-size: 13px; }
+    .card .time { font-size: 12px; }
+    .controls .count { display: none; }
+    .container { padding: 8px; }
+    .modal { margin-top: 8px; }
+    .modal-header { padding: 16px 16px 12px; }
+    .modal-body { padding: 12px 16px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect x="2" y="2" width="28" height="28" rx="6" fill="var(--accent)" fill-opacity="0.15" stroke="var(--accent)" stroke-width="1.5"/>
+        <path d="M8 20 L16 8 L24 20 Z" fill="var(--accent)" fill-opacity="0.3" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="16" cy="16" r="2" fill="var(--accent)"/>
+      </svg>
+      <h1>Pit <span>Board</span><small>beta</small></h1>
+    </div>
+    <div class="header-info">
+      <span id="tzDisplay"></span>
+      <span>|</span>
+      <span id="seriesCount">0 series</span>
+      <button class="filter-btn" onclick="showAbout()" style="font-size:11px;">About</button>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="series-filters" id="filters"></div>
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="upcoming" onclick="setView('upcoming')">Upcoming</button>
+      <button class="view-btn" data-view="week" onclick="setView('week')">This Week</button>
+      <button class="view-btn" data-view="all" onclick="setView('all')">All</button>
+    </div>
+    <span class="count" id="eventCount">0 events</span>
+  </div>
+
+  <div id="app">
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>Loading schedules...</span>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="indicator"><span class="swatch" style="background:var(--green)"></span> F1 data via OpenF1 API</span>
+    <span class="indicator"><span class="swatch" style="background:var(--accent)"></span> Times in your local timezone</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--gray)">Click any event for session times &amp; results</span>
+  </div>
+</div>
+
+<!-- Event Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<!-- About Modal -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="close-btn" onclick="hideAbout()">&times;</button>
+      <h2>Pit Board</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:8px;">A completely free, open-source motorsport calendar. No ads, no signups, no subscriptions.</p>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">Series covered</div>
+      <ul id="seriesList" style="list-style:none;padding:0;"></ul>
+      <div class="section-title">Data sources</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;">
+        F1 session times &amp; results from the free <strong>OpenF1 API</strong>.<br>
+        Other series schedules from Wikipedia.<br>
+        Session estimates based on typical weekend formats (<span class="badge-est">est.</span>).<br>
+        Times auto-converted to your local timezone.
+      </p>
+      <button class="close-btn" onclick="hideAbout()" style="margin-top:16px;width:100%;padding:10px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Series definitions ───────────────────────────────────────────────
+const SERIES = [
+  { id:'f1', name:'Formula 1', color:'#e10600', short:'F1' },
+  { id:'motogp', name:'MotoGP', color:'#2b2b2b', short:'MGP' },
+  { id:'wec', name:'WEC', color:'#004990', short:'WEC' },
+  { id:'indycar', name:'IndyCar', color:'#004080', short:'INDY' },
+  { id:'formulae', name:'Formula E', color:'#00ffb2', short:'FE' },
+  { id:'nascar', name:'NASCAR Cup', color:'#e41e26', short:'NASC' },
+  { id:'wrc', name:'WRC', color:'#0033a0', short:'WRC' },
+  { id:'supercars', name:'Supercars', color:'#ff6600', short:'SUPE' },
+  { id:'f1academy', name:'F1 Academy', color:'#ff69b4', short:'F1A' },
+  { id:'superbike', name:'WorldSBK', color:'#009b77', short:'WSBK' },
+];
+
+const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ─── Session templates for non-F1 series ────────────────────────────
+// dayOffset: days relative to main race date (0 = race day)
+// hour: approximate hour of day (UTC)
+const SESSION_TEMPLATES = {
+  f1: [
+    { name:'Practice 1', type:'Practice', dayOffset:-2, hour:7 },
+    { name:'Practice 2', type:'Practice', dayOffset:-2, hour:11 },
+    { name:'Practice 3', type:'Practice', dayOffset:-1, hour:6 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:-1, hour:10 },
+    { name:'Race', type:'Race', dayOffset:0, hour:11 },
+  ],
+  motogp: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-3, hour:7 },
+    { name:'Practice', type:'Practice', dayOffset:-3, hour:11 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-2, hour:7 },
+    { name:'Qualifying 1', type:'Qualifying', dayOffset:-2, hour:8 },
+    { name:'Qualifying 2', type:'Qualifying', dayOffset:-2, hour:9 },
+    { name:'Sprint', type:'Race', dayOffset:-2, hour:12 },
+    { name:'Warm Up', type:'Practice', dayOffset:0, hour:6 },
+    { name:'Race', type:'Race', dayOffset:0, hour:11 },
+  ],
+  wec: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-2, hour:8 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-2, hour:12 },
+    { name:'Free Practice 3', type:'Practice', dayOffset:-1, hour:7 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:-1, hour:11 },
+    { name:'Hyperpole', type:'Qualifying', dayOffset:-1, hour:12 },
+    { name:'Race', type:'Race', dayOffset:0, hour:10 },
+  ],
+  indycar: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-2, hour:10 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-1, hour:9 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:-1, hour:13 },
+    { name:'Warm Up', type:'Practice', dayOffset:0, hour:7 },
+    { name:'Race', type:'Race', dayOffset:0, hour:11 },
+  ],
+  formulae: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-1, hour:6 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-1, hour:8 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:0, hour:6 },
+    { name:'Race', type:'Race', dayOffset:0, hour:11 },
+  ],
+  nascar: [
+    { name:'Practice', type:'Practice', dayOffset:-1, hour:11 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:-1, hour:14 },
+    { name:'Race', type:'Race', dayOffset:0, hour:11 },
+  ],
+  wrc: [
+    { name:'Shakedown', type:'Practice', dayOffset:-2, hour:6 },
+    { name:'Stage 1', type:'Race', dayOffset:-1, hour:7 },
+    { name:'Stage 2', type:'Race', dayOffset:0, hour:6 },
+    { name:'Stage 3', type:'Race', dayOffset:0, hour:12 },
+  ],
+  supercars: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-2, hour:8 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-1, hour:8 },
+    { name:'Qualifying', type:'Qualifying', dayOffset:-1, hour:12 },
+    { name:'Race 1', type:'Race', dayOffset:-1, hour:15 },
+    { name:'Race 2', type:'Race', dayOffset:0, hour:11 },
+  ],
+  f1academy: [
+    { name:'Free Practice', type:'Practice', dayOffset:-2, hour:7 },
+    { name:'Qualifying 1', type:'Qualifying', dayOffset:-1, hour:7 },
+    { name:'Qualifying 2', type:'Qualifying', dayOffset:-1, hour:8 },
+    { name:'Race 1', type:'Race', dayOffset:-1, hour:12 },
+    { name:'Race 2', type:'Race', dayOffset:0, hour:7 },
+  ],
+  superbike: [
+    { name:'Free Practice 1', type:'Practice', dayOffset:-2, hour:7 },
+    { name:'Free Practice 2', type:'Practice', dayOffset:-2, hour:11 },
+    { name:'Free Practice 3', type:'Practice', dayOffset:-1, hour:7 },
+    { name:'Superpole', type:'Qualifying', dayOffset:-1, hour:11 },
+    { name:'Race 1', type:'Race', dayOffset:-1, hour:14 },
+    { name:'Warm Up', type:'Practice', dayOffset:0, hour:6 },
+    { name:'Superpole Race', type:'Race', dayOffset:0, hour:8 },
+    { name:'Race 2', type:'Race', dayOffset:0, hour:11 },
+  ],
+};
+
+// ─── State ────────────────────────────────────────────────────────────
+let state = {
+  events: [],      // Array of race weekend objects { series, name, venue, date, sessions:[] }
+  view: 'upcoming',
+  following: JSON.parse(localStorage.getItem('pb_following') || '[]'),
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────
+function fmtDate(d) {
+  d = new Date(d);
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+function fmtTime(d) {
+  d = new Date(d);
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+function fmtShortDate(d) {
+  d = new Date(d);
+  return { day:d.getDate(), month:MONTHS[d.getMonth()] };
+}
+function isoStr(d) { return new Date(d).toISOString().slice(0,10); }
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a).setHours(0,0,0,0)) / 86400000);
+}
+function isThisWeek(d) {
+  const now = new Date();
+  const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+  const end = new Date(start); end.setDate(start.getDate() + 7);
+  return d >= start && d < end;
+}
+function now() { return new Date(); }
+
+// ─── OpenF1 API ──────────────────────────────────────────────────────
+let f1MeetingsCache = null;
+
+async function fetchF1Meetings() {
+  if (f1MeetingsCache) return f1MeetingsCache;
+  try {
+    const r = await fetch('https://api.openf1.org/v1/meetings?year=2026');
+    f1MeetingsCache = await r.json();
+    return f1MeetingsCache;
+  } catch (e) {
+    console.warn('OpenF1 meetings failed', e);
+    return [];
+  }
+}
+
+async function fetchF1Sessions(meetingKey) {
+  try {
+    const r = await fetch(`https://api.openf1.org/v1/sessions?meeting_key=${meetingKey}`);
+    return await r.json();
+  } catch (e) {
+    console.warn(`Sessions failed for ${meetingKey}`, e);
+    return [];
+  }
+}
+
+async function fetchF1Results(sessionKey) {
+  try {
+    const r = await fetch(`https://api.openf1.org/v1/session_result?session_key=${sessionKey}&position<=20`);
+    return await r.json();
+  } catch (e) {
+    console.warn(`Results failed for ${sessionKey}`, e);
+    return [];
+  }
+}
+
+async function fetchF1Drivers(sessionKey) {
+  try {
+    const r = await fetch(`https://api.openf1.org/v1/drivers?session_key=${sessionKey}`);
+    return await r.json();
+  } catch (e) {
+    console.warn(`Drivers failed for ${sessionKey}`, e);
+    return [];
+  }
+}
+
+// Build F1 race weekends from API
+async function buildF1Weekends() {
+  const meetings = await fetchF1Meetings();
+  if (!meetings || meetings.length === 0) return [];
+
+  const weekends = [];
+  for (const m of meetings) {
+    // Skip non-race meetings like pre-season testing
+    if (m.meeting_name && m.meeting_name.toLowerCase().includes('testing')) continue;
+
+    const sessionData = await fetchF1Sessions(m.meeting_key);
+    if (!sessionData || sessionData.length === 0) continue;
+
+    // Sort sessions by start date
+    sessionData.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
+
+    // Find the main race session for the event name/date
+    const raceSession = sessionData.find(s => s.session_type === 'Race') || sessionData[sessionData.length - 1];
+    const mainDate = new Date(raceSession.date_start || raceSession.date_end || m.date_start);
+
+    // Build sessions array with results fetched for past sessions
+    const sessions = [];
+    for (const s of sessionData) {
+      const start = new Date(s.date_start);
+
+      const session = {
+        name: s.session_name,
+        type: s.session_type,
+        dateStart: s.date_start,
+        dateEnd: s.date_end,
+        isApi: true,
+        results: null,
+      };
+
+      // Fetch results + drivers for past sessions
+      if (start < now() && s.session_key) {
+        try {
+          const [results, drivers] = await Promise.all([
+            fetchF1Results(s.session_key),
+            fetchF1Drivers(s.session_key),
+          ]);
+          const driverMap = {};
+          if (drivers && drivers.length) {
+            for (const d of drivers) driverMap[d.driver_number] = d;
+          }
+          if (results && results.length) {
+            session.results = results.map(r => ({
+              position: r.position,
+              driver_number: r.driver_number,
+              broadcast_name: driverMap[r.driver_number]?.broadcast_name || `#${r.driver_number}`,
+              team_name: driverMap[r.driver_number]?.team_name || '',
+              team_colour: driverMap[r.driver_number]?.team_colour || '',
+            }));
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      sessions.push(session);
+    }
+
+    weekends.push({
+      series: 'f1',
+      name: m.meeting_name || m.meeting_official_name,
+      venue: m.circuit_short_name || m.meeting_name,
+      date: mainDate.toISOString(),
+      sessions,
+      isApi: true,
+    });
+  }
+
+  return weekends;
+}
+
+// ─── Hardcoded 2026 calendars ───────────────────────────────────────
+const CALENDARS = {
+  f1: [ /* replaced by API data; fallback only */
+    { name:'Australian Grand Prix', date:'2026-03-08', venue:'Albert Park' },
+    { name:'Chinese Grand Prix', date:'2026-03-15', venue:'Shanghai' },
+    { name:'Japanese Grand Prix', date:'2026-03-29', venue:'Suzuka' },
+    { name:'Miami Grand Prix', date:'2026-05-03', venue:'Miami' },
+    { name:'Canadian Grand Prix', date:'2026-05-24', venue:'Montreal' },
+    { name:'Spanish Grand Prix', date:'2026-06-14', venue:'Barcelona' },
+    { name:'Austrian Grand Prix', date:'2026-06-28', venue:'Red Bull Ring' },
+    { name:'British Grand Prix', date:'2026-07-05', venue:'Silverstone' },
+    { name:'Belgian Grand Prix', date:'2026-07-26', venue:'Spa' },
+    { name:'Hungarian Grand Prix', date:'2026-08-02', venue:'Hungaroring' },
+    { name:'Dutch Grand Prix', date:'2026-08-30', venue:'Zandvoort' },
+    { name:'Italian Grand Prix', date:'2026-09-06', venue:'Monza' },
+    { name:'Singapore Grand Prix', date:'2026-09-20', venue:'Marina Bay' },
+    { name:'Azerbaijan Grand Prix', date:'2026-10-04', venue:'Baku' },
+    { name:'United States Grand Prix', date:'2026-10-18', venue:'COTA' },
+    { name:'Mexico City Grand Prix', date:'2026-10-25', venue:'Hermanos Rodriguez' },
+    { name:'Sao Paulo Grand Prix', date:'2026-11-08', venue:'Interlagos' },
+    { name:'Las Vegas Grand Prix', date:'2026-11-21', venue:'Las Vegas' },
+    { name:'Qatar Grand Prix', date:'2026-11-29', venue:'Lusail' },
+    { name:'Abu Dhabi Grand Prix', date:'2026-12-06', venue:'Yas Marina' },
+  ],
+  motogp: [
+    { name:'Thai Grand Prix', date:'2026-03-01', venue:'Buriram' },
+    { name:'Brazilian Grand Prix', date:'2026-03-22', venue:'Goiania' },
+    { name:'GP of the Americas', date:'2026-03-29', venue:'COTA' },
+    { name:'Spanish Grand Prix', date:'2026-04-26', venue:'Jerez' },
+    { name:'French Grand Prix', date:'2026-05-10', venue:'Le Mans' },
+    { name:'Catalan Grand Prix', date:'2026-05-17', venue:'Barcelona' },
+    { name:'Italian Grand Prix', date:'2026-05-31', venue:'Mugello' },
+    { name:'Hungarian Grand Prix', date:'2026-06-07', venue:'Balaton Park' },
+    { name:'Czech Grand Prix', date:'2026-06-21', venue:'Brno' },
+    { name:'Dutch TT', date:'2026-06-28', venue:'Assen' },
+    { name:'German Grand Prix', date:'2026-07-12', venue:'Sachsenring' },
+    { name:'British Grand Prix', date:'2026-08-09', venue:'Silverstone' },
+    { name:'Aragon Grand Prix', date:'2026-08-30', venue:'Aragon' },
+    { name:'San Marino GP', date:'2026-09-13', venue:'Misano' },
+    { name:'Austrian Grand Prix', date:'2026-09-20', venue:'Red Bull Ring' },
+    { name:'Japanese Grand Prix', date:'2026-10-04', venue:'Motegi' },
+    { name:'Australian Grand Prix', date:'2026-10-25', venue:'Phillip Island' },
+    { name:'Malaysian Grand Prix', date:'2026-11-01', venue:'Sepang' },
+    { name:'Qatar Grand Prix', date:'2026-11-08', venue:'Lusail' },
+    { name:'Portuguese Grand Prix', date:'2026-11-22', venue:'Portimao' },
+    { name:'Valencia Grand Prix', date:'2026-11-29', venue:'Valencia' },
+  ],
+  wec: [
+    { name:'Qatar 1812 km', date:'2026-02-28', venue:'Lusail' },
+    { name:'6 Hours of Imola', date:'2026-03-22', venue:'Imola' },
+    { name:'6 Hours of Spa', date:'2026-04-26', venue:'Spa' },
+    { name:'24 Hours of Le Mans', date:'2026-06-13', venue:'Le Mans' },
+    { name:'6 Hours of Sao Paulo', date:'2026-07-12', venue:'Interlagos' },
+    { name:'6 Hours of Fuji', date:'2026-09-13', venue:'Fuji' },
+    { name:'8 Hours of Bahrain', date:'2026-11-01', venue:'Bahrain' },
+  ],
+  indycar: [
+    { name:'St. Petersburg', date:'2026-03-08', venue:'St. Petersburg' },
+    { name:'Thermal Club', date:'2026-03-22', venue:'Thermal Club' },
+    { name:'Long Beach', date:'2026-04-12', venue:'Long Beach' },
+    { name:'Barber', date:'2026-04-26', venue:'Barber' },
+    { name:'Indianapolis GP', date:'2026-05-09', venue:'IMS Road' },
+    { name:'Indianapolis 500', date:'2026-05-24', venue:'Indianapolis' },
+    { name:'Detroit', date:'2026-05-31', venue:'Detroit' },
+    { name:'Road America', date:'2026-06-14', venue:'Road America' },
+    { name:'Laguna Seca', date:'2026-06-21', venue:'Laguna Seca' },
+    { name:'Mid-Ohio', date:'2026-07-05', venue:'Mid-Ohio' },
+    { name:'Iowa', date:'2026-07-12', venue:'Iowa' },
+    { name:'Toronto', date:'2026-07-19', venue:'Toronto' },
+    { name:'Gateway', date:'2026-08-16', venue:'Gateway' },
+    { name:'Portland', date:'2026-08-30', venue:'Portland' },
+    { name:'Milwaukee', date:'2026-09-06', venue:'Milwaukee' },
+    { name:'Nashville', date:'2026-09-13', venue:'Nashville' },
+  ],
+  formulae: [
+    { name:'Sao Paulo ePrix', date:'2026-01-17', venue:'Sao Paulo' },
+    { name:'Mexico City ePrix', date:'2026-02-07', venue:'Mexico City' },
+    { name:'Jeddah ePrix', date:'2026-02-21', venue:'Jeddah' },
+    { name:'Miami ePrix', date:'2026-03-14', venue:'Miami' },
+    { name:'Monaco ePrix', date:'2026-04-11', venue:'Monaco' },
+    { name:'Tokyo ePrix', date:'2026-05-17', venue:'Tokyo' },
+    { name:'Shanghai ePrix', date:'2026-05-31', venue:'Shanghai' },
+    { name:'Berlin ePrix', date:'2026-06-21', venue:'Berlin' },
+    { name:'London ePrix', date:'2026-07-26', venue:'London' },
+    { name:'Portland ePrix', date:'2026-08-09', venue:'Portland' },
+  ],
+  nascar: [
+    { name:'Daytona 500', date:'2026-02-15', venue:'Daytona' },
+    { name:'Atlanta', date:'2026-02-22', venue:'Atlanta' },
+    { name:'COTA', date:'2026-03-01', venue:'COTA' },
+    { name:'Phoenix', date:'2026-03-08', venue:'Phoenix' },
+    { name:'Las Vegas', date:'2026-03-15', venue:'Las Vegas' },
+    { name:'Homestead', date:'2026-03-22', venue:'Homestead' },
+    { name:'Martinsville', date:'2026-03-29', venue:'Martinsville' },
+    { name:'Darlington', date:'2026-04-05', venue:'Darlington' },
+    { name:'Bristol', date:'2026-04-12', venue:'Bristol' },
+    { name:'Talladega', date:'2026-04-26', venue:'Talladega' },
+    { name:'Dover', date:'2026-05-03', venue:'Dover' },
+    { name:'Kansas', date:'2026-05-10', venue:'Kansas' },
+    { name:'North Wilkesboro', date:'2026-05-17', venue:'Wilkesboro' },
+    { name:'Charlotte 600', date:'2026-05-24', venue:'Charlotte' },
+    { name:'Nashville', date:'2026-06-07', venue:'Nashville' },
+    { name:'Michigan', date:'2026-06-14', venue:'Michigan' },
+    { name:'Sonoma', date:'2026-06-21', venue:'Sonoma' },
+    { name:'Pocono', date:'2026-06-27', venue:'Pocono' },
+    { name:'Atlanta Night', date:'2026-07-04', venue:'Atlanta' },
+    { name:'Chicago Street', date:'2026-07-11', venue:'Chicago' },
+    { name:'New Hampshire', date:'2026-07-18', venue:'New Hampshire' },
+    { name:'Indianapolis', date:'2026-07-26', venue:'Indianapolis' },
+  ],
+  wrc: [
+    { name:'Monte Carlo', date:'2026-01-19', venue:'Monte Carlo' },
+    { name:'Sweden', date:'2026-02-09', venue:'Sweden' },
+    { name:'Mexico', date:'2026-03-16', venue:'Mexico' },
+    { name:'Portugal', date:'2026-04-20', venue:'Portugal' },
+    { name:'Sardinia', date:'2026-05-18', venue:'Sardinia' },
+    { name:'Finland', date:'2026-06-15', venue:'Finland' },
+    { name:'Greece', date:'2026-07-13', venue:'Greece' },
+    { name:'New Zealand', date:'2026-08-10', venue:'New Zealand' },
+    { name:'Chile', date:'2026-09-07', venue:'Chile' },
+    { name:'Japan', date:'2026-10-12', venue:'Japan' },
+  ],
+  supercars: [
+    { name:'Sydney 500', date:'2026-03-07', venue:'Sydney' },
+    { name:'Melbourne SuperSprint', date:'2026-03-21', venue:'Melbourne' },
+    { name:'Taupo 400', date:'2026-04-11', venue:'Taupo' },
+    { name:'Perth SuperSprint', date:'2026-04-25', venue:'Perth' },
+    { name:'Symmons Plains', date:'2026-05-16', venue:'Symmons Plains' },
+    { name:'Hidden Valley', date:'2026-06-06', venue:'Hidden Valley' },
+    { name:'Townsville 500', date:'2026-07-04', venue:'Townsville' },
+    { name:'The Bend', date:'2026-07-25', venue:'The Bend' },
+    { name:'Queensland 500', date:'2026-08-22', venue:'Queensland' },
+    { name:'Bathurst 1000', date:'2026-10-11', venue:'Mount Panorama' },
+    { name:'Gold Coast 500', date:'2026-10-24', venue:'Gold Coast' },
+    { name:'Adelaide 500', date:'2026-11-21', venue:'Adelaide' },
+  ],
+  f1academy: [
+    { name:'Shanghai', date:'2026-03-14', venue:'Shanghai' },
+    { name:'Jeddah', date:'2026-04-18', venue:'Jeddah' },
+    { name:'Miami', date:'2026-05-02', venue:'Miami' },
+    { name:'Barcelona', date:'2026-06-13', venue:'Barcelona' },
+    { name:'Silverstone', date:'2026-07-04', venue:'Silverstone' },
+    { name:'Spa', date:'2026-07-25', venue:'Spa' },
+    { name:'Monza', date:'2026-09-05', venue:'Monza' },
+    { name:'Yas Marina', date:'2026-12-05', venue:'Yas Marina' },
+  ],
+  superbike: [
+    { name:'Phillip Island', date:'2026-02-21', venue:'Phillip Island' },
+    { name:'Portimao', date:'2026-03-28', venue:'Portimao' },
+    { name:'Assen', date:'2026-04-11', venue:'Assen' },
+    { name:'Misano', date:'2026-04-25', venue:'Misano' },
+    { name:'Donington', date:'2026-05-09', venue:'Donington' },
+    { name:'Most', date:'2026-05-30', venue:'Most' },
+    { name:'Balaton Park', date:'2026-06-13', venue:'Balaton Park' },
+    { name:'Laguna Seca', date:'2026-07-11', venue:'Laguna Seca' },
+    { name:'Magny-Cours', date:'2026-08-29', venue:'Magny-Cours' },
+    { name:'Aragon', date:'2026-09-12', venue:'Aragon' },
+    { name:'Estoril', date:'2026-09-26', venue:'Estoril' },
+    { name:'Jerez', date:'2026-10-10', venue:'Jerez' },
+  ],
+};
+
+function generateSessions(seriesId, raceDate, raceName) {
+  const tmpl = SESSION_TEMPLATES[seriesId];
+  if (!tmpl) return [];
+
+  const raceD = new Date(raceDate + 'T12:00:00');
+  return tmpl.map(t => {
+    const ds = new Date(raceD);
+    ds.setDate(ds.getDate() + t.dayOffset);
+    ds.setUTCHours(t.hour, 0, 0, 0);
+    return {
+      name: t.name,
+      type: t.type,
+      dateStart: ds.toISOString(),
+      dateEnd: null,
+      isApi: false,
+      results: null,
+      resultsFetched: false,
+      estimated: true,
+    };
+  });
+}
+
+function buildNonF1Weekends() {
+  const weekends = [];
+  for (const series of SERIES) {
+    if (series.id === 'f1') continue;
+    const cal = CALENDARS[series.id];
+    if (!cal) continue;
+    for (const race of cal) {
+      const sessions = generateSessions(series.id, race.date, race.name);
+      weekends.push({
+        series: series.id,
+        name: race.name,
+        venue: race.venue || '',
+        date: new Date(race.date + 'T12:00:00').toISOString(),
+        sessions,
+        isApi: false,
+      });
+    }
+  }
+  return weekends;
+}
+
+// ─── Load everything ─────────────────────────────────────────────────
+async function loadAll() {
+  const f1Weekends = await buildF1Weekends();
+  const nonF1 = buildNonF1Weekends();
+
+  // If F1 API failed, use hardcoded fallback
+  let all;
+  if (f1Weekends.length === 0) {
+    const f1Fallback = CALENDARS.f1.map(r => ({
+      series: 'f1',
+      name: r.name,
+      venue: r.venue,
+      date: new Date(r.date + 'T12:00:00').toISOString(),
+      sessions: generateSessions('f1', r.date, r.name),
+      isApi: false,
+    }));
+    all = [...f1Fallback, ...nonF1];
+  } else {
+    all = [...f1Weekends, ...nonF1];
+  }
+
+  state.events = all;
+  render();
+  renderFilters();
+  document.getElementById('seriesCount').textContent =
+    `${SERIES.length} series · ${all.length} events`;
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────
+function getSessionStatus(session) {
+  const start = new Date(session.dateStart);
+  const end = session.dateEnd ? new Date(session.dateEnd) : new Date(start.getTime() + 7200000);
+  if (start > now()) return 'upcoming';
+  if (end > now()) return 'live';
+  return 'completed';
+}
+
+function renderSessionDots(sessions) {
+  return sessions.map(s => {
+    const status = getSessionStatus(s);
+    return `<span class="dot ${status}"></span>`;
+  }).join('');
+}
+
+function render() {
+  const root = document.getElementById('app');
+  const nowDate = now();
+
+  let filtered = state.events.filter(e => {
+    if (state.following.length > 0 && !state.following.includes(e.series)) return false;
+    const d = new Date(e.date);
+    if (state.view === 'upcoming') return d >= new Date(nowDate.getTime() - 86400000 * 3);
+    if (state.view === 'week') return isThisWeek(d);
+    return true;
+  });
+
+  filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  document.getElementById('eventCount').textContent = `${filtered.length} events`;
+
+  if (filtered.length === 0) {
+    root.innerHTML = `
+      <div class="empty">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="6" width="40" height="38" rx="3" stroke-linejoin="round"/>
+          <path d="M4 16h40"/><path d="M16 4v8"/><path d="M32 4v8"/>
+        </svg>
+        <h3>No events found</h3>
+        <p>${state.following.length > 0 ? 'Try unfollowing some series' : 'No upcoming races scheduled'}</p>
+      </div>`;
+    return;
+  }
+
+  const groups = {};
+  for (const e of filtered) {
+    const d = new Date(e.date);
+    const key = isoStr(d);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(e);
+  }
+
+  let html = '<div class="events">';
+  for (const [dateStr, events] of Object.entries(groups)) {
+    const d = new Date(dateStr + 'T12:00:00');
+    const rel = daysBetween(nowDate, d) === 0 ? 'Today'
+              : daysBetween(nowDate, d) === 1 ? 'Tomorrow'
+              : daysBetween(nowDate, d) === -1 ? 'Yesterday' : '';
+
+    html += `<div class="day-group">
+      <div class="day-label">
+        <span class="dot"></span>
+        ${fmtDate(d)} ${rel ? `<span style="color:var(--accent);margin-left:6px;font-weight:700;">${rel}</span>` : ''}
+        <span class="date-range">${events.length} event${events.length>1?'s':''}</span>
+      </div>`;
+
+    for (const e of events) {
+      const s = SERIES.find(x => x.id === e.series);
+      const ed = new Date(e.date);
+      const sd = fmtShortDate(ed);
+      const isFollowing = state.following.includes(e.series);
+      const completedSessions = e.sessions.filter(s => getSessionStatus(s) === 'completed').length;
+      const totalSessions = e.sessions.length;
+      const dotsHtml = renderSessionDots(e.sessions);
+
+      html += `<div class="card" onclick="openDetail('${encodeURIComponent(e.series)}','${encodeURIComponent(e.name)}')">
+        <div class="date-box">
+          <div class="day">${sd.day}</div>
+          <div class="month">${sd.month}</div>
+        </div>
+        <div class="info">
+          <div class="series-tag" style="background:${s?.color}22;color:${s?.color||'#fff'}">${s?.short||e.series}</div>
+          <div class="name">${e.name}${e.venue?' · '+e.venue:''}</div>
+          <div class="detail">${fmtDate(ed)}
+            ${totalSessions > 1 ? ` · ${completedSessions}/${totalSessions} sessions` : ''}
+            ${!e.isApi ? ' <span class="badge-est">est.</span>' : ''}
+          </div>
+          ${dotsHtml ? `<div class="session-dots">${dotsHtml}</div>` : ''}
+        </div>
+        <div class="time">
+          ${fmtTime(ed)}
+          <span class="label">local time</span>
+        </div>
+        <button class="follow-btn ${isFollowing?'following':''}"
+          onclick="event.stopPropagation();toggleFollow('${e.series}')"
+          title="${isFollowing?'Unfollow':'Follow'} ${s?.name||e.series}">
+          ${isFollowing ? '★' : '☆'}
+        </button>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  root.innerHTML = html;
+}
+
+// ─── Detail Modal ────────────────────────────────────────────────────
+function openDetail(seriesId, eventName) {
+  seriesId = decodeURIComponent(seriesId);
+  eventName = decodeURIComponent(eventName);
+  const evt = state.events.find(e => e.series === seriesId && e.name === eventName);
+  if (!evt) return;
+
+  const s = SERIES.find(x => x.id === evt.series);
+  const nowDate = now();
+
+  let html = `<div class="modal-header">
+    <button class="close-btn" onclick="closeDetail()">&times;</button>
+    <div class="m-series-tag" style="background:${s?.color}22;color:${s?.color||'#fff'}">${s?.name||seriesId}</div>
+    <h2>${evt.name}</h2>
+    <div class="m-venue">${evt.venue || 'TBD'}</div>
+    <div class="m-date-range">${fmtDate(evt.date)}${!evt.isApi ? ' <span class="badge-est">estimated schedule</span>' : ''}</div>
+  </div>
+  <div class="modal-body">`;
+
+  // Sessions
+  html += `<div class="section-title">Weekend Schedule ${evt.sessions.some(s=>s.estimated) ? '(times are estimates)' : ''}</div>`;
+
+  if (evt.sessions.length === 0) {
+    html += `<p style="font-size:13px;color:var(--text2);">Session details coming soon</p>`;
+  } else {
+    for (const session of evt.sessions) {
+      const status = getSessionStatus(session);
+      const startD = new Date(session.dateStart);
+      let statusText = status === 'completed' ? 'Finished' : status === 'live' ? 'LIVE' : fmtTime(startD);
+      let statusClass = status;
+
+      html += `<div class="session-row">
+        <span class="s-indicator ${status}"></span>
+        <span class="s-name">${session.name}</span>
+        <span class="s-time">${fmtDate(startD)}, ${fmtTime(startD)}${session.estimated ? ' <span class="badge-est">est.</span>' : ''}</span>
+        <span class="s-status ${statusClass}">${statusText}</span>
+      </div>`;
+
+      // Results for past sessions
+      if (status === 'completed' && session.results && session.results.length > 0) {
+        const isTop3 = (p) => p <= 3;
+        html += `<table class="results-table">
+          <tr><th>Pos</th><th>Driver</th><th>Team</th></tr>`;
+        const sorted = session.results.sort((a,b) => (a.position||999) - (b.position||999));
+        for (const r of sorted.slice(0, 10)) {
+          html += `<tr>
+            <td class="pos ${isTop3(r.position)?'top3':''}">${r.position}</td>
+            <td class="driver">${r.broadcast_name || r.driver_name || '—'}</td>
+            <td class="team">${r.team_name || '—'}</td>
+          </tr>`;
+        }
+        html += `</table>`;
+      } else if (status === 'completed' && session.isApi) {
+        html += `<div style="font-size:11px;color:var(--gray);padding:4px 12px 8px;">No results available</div>`;
+      }
+    }
+  }
+
+  html += '</div>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.remove('show');
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────
+function setView(v) {
+  state.view = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  render();
+}
+
+function toggleFollow(sid) {
+  const idx = state.following.indexOf(sid);
+  if (idx >= 0) state.following.splice(idx, 1);
+  else state.following.push(sid);
+  localStorage.setItem('pb_following', JSON.stringify(state.following));
+  render();
+  renderFilters();
+}
+
+function renderFilters() {
+  const el = document.getElementById('filters');
+  el.innerHTML = SERIES.map(s => `
+    <button class="filter-btn ${state.following.length === 0 || state.following.includes(s.id) ? 'active' : ''}"
+      data-series="${s.id}" onclick="toggleFollow('${s.id}')">
+      ${s.name}
+    </button>
+  `).join('');
+}
+
+function showAbout() {
+  document.getElementById('aboutModal').classList.add('show');
+  const list = document.getElementById('seriesList');
+  list.innerHTML = SERIES.map(s => `
+    <li style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:13px;">
+      <span><span style="display:inline-block;width:20px;height:20px;border-radius:4px;text-align:center;line-height:20px;font-size:10px;font-weight:700;background:${s.color}22;color:${s.color};margin-right:8px;">${s.short}</span> ${s.name}</span>
+      <span style="font-size:11px;color:var(--text2)">${(CALENDARS[s.id]||[]).length} rounds</span>
+    </li>
+  `).join('');
+}
+function hideAbout() { document.getElementById('aboutModal').classList.remove('show'); }
+
+// Close modal on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+document.getElementById('aboutModal').addEventListener('click', function(e) {
+  if (e.target === this) hideAbout();
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────
+document.getElementById('tzDisplay').textContent =
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+loadAll();
+
+// Refresh every 30s
+setInterval(render, 30000);
+</script>
+</body>
+</html>

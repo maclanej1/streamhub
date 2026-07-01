@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamHub — Movies, TV, Sports & Live TV</title>
+<style>
+  :root {
+    --bg: #0b0d14;
+    --surface: #131720;
+    --surface2: #1a1f2e;
+    --card: #1a1f2e;
+    --card-hover: #222a3d;
+    --border: #252d3f;
+    --text: #e8ecf1;
+    --text2: #8895aa;
+    --accent: #f5c518;
+    --accent2: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --radius: 10px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Nav */
+  .nav {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    position: sticky; top: 0; z-index: 50;
+    overflow-x: auto;
+  }
+  .nav .logo {
+    font-size: 20px; font-weight: 800; margin-right: 16px;
+    padding: 14px 0;
+    white-space: nowrap;
+  }
+  .nav .logo span { color: var(--accent); }
+  .nav a {
+    padding: 14px 16px; text-decoration: none;
+    font-size: 13px; font-weight: 600; color: var(--text2);
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .nav a:hover { color: var(--text); background: var(--surface2); }
+  .nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .container { max-width: 1400px; margin:0 auto; padding: 20px 16px; }
+
+  /* Section header */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .section-header h2 { font-size: 22px; font-weight: 700; }
+  .section-header .sub { font-size: 13px; color: var(--text2); }
+
+  /* Movie/TV grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .grid-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .2s;
+    border: 1px solid transparent;
+  }
+  .grid-item:hover { border-color: var(--accent2); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .grid-item .poster {
+    aspect-ratio: 2/3;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: var(--text2);
+    overflow: hidden;
+  }
+  .grid-item .poster img { width: 100%; height: 100%; object-fit: cover; }
+  .grid-item .meta { padding: 10px; }
+  .grid-item .meta .title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grid-item .meta .subtitle { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .grid-item .meta .badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 3px; margin-top: 4px;
+  }
+  .grid-item .meta .badge.movie { background: rgba(59,130,246,0.15); color: var(--accent2); }
+  .grid-item .meta .badge.tv { background: rgba(245,197,24,0.15); color: var(--accent); }
+
+  /* Search */
+  .search-box {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .search-box input {
+    flex: 1; min-width: 200px;
+    padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 14px;
+    outline: none;
+  }
+  .search-box input:focus { border-color: var(--accent2); }
+  .search-box select {
+    padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 13px;
+    outline: none; cursor: pointer;
+  }
+  .search-box button {
+    padding: 10px 20px; border-radius: 8px; border: none;
+    background: var(--accent2); color: #fff; font-weight: 600;
+    cursor: pointer; font-size: 13px;
+  }
+  .search-box button:hover { opacity: 0.9; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 16px;
+    background: var(--surface); border-radius: 8px; padding: 3px;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    padding: 7px 16px; border: none; border-radius: 6px;
+    background: transparent; color: var(--text2); cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: all .15s;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { background: var(--accent2); color: #fff; }
+
+  /* Sports cards */
+  .sport-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  .sport-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .sport-card:hover { border-color: var(--accent2); background: var(--card-hover); }
+  .sport-card .teams {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .sport-card .teams .badge-img { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text2); overflow: hidden; }
+  .sport-card .teams .badge-img img { width: 100%; height: 100%; object-fit: cover; }
+  .sport-card .teams .vs { font-size: 12px; color: var(--text2); }
+  .sport-card .teams .team-name { font-size: 14px; font-weight: 600; }
+  .sport-card .match-info { font-size: 12px; color: var(--text2); }
+  .sport-card .match-info .tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; margin-right: 6px; text-transform: uppercase;
+  }
+  .sport-card .match-info .tag.live { background: rgba(239,68,68,0.15); color: var(--red); }
+  .sport-card .match-info .tag.upcoming { background: rgba(59,130,246,0.15); color: var(--accent2); }
+  .sport-card .match-info .tag.finished { background: rgba(34,197,94,0.15); color: var(--green); }
+
+  /* Channel grid */
+  .channel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .channel-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    border: 1px solid var(--border);
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .channel-card:hover { border-color: var(--accent2); background: var(--card-hover); }
+  .channel-card .ch-logo {
+    width: 60px; height: 60px; margin: 0 auto 8px;
+    border-radius: 8px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: var(--text2);
+    overflow: hidden;
+  }
+  .channel-card .ch-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+  .channel-card .ch-name { font-size: 12px; font-weight: 600; }
+  .channel-card .ch-status { font-size: 10px; margin-top: 4px; }
+  .channel-card .ch-status.online { color: var(--green); }
+  .channel-card .ch-status.offline { color: var(--text2); }
+
+  /* Player modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-player {
+    width: 100%; max-width: 960px;
+    background: #000; border-radius: 12px; overflow: hidden;
+    position: relative;
+  }
+  .modal-player .close-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(0,0,0,0.7); color: #fff; border: none;
+    font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-player .close-btn:hover { background: rgba(0,0,0,0.9); }
+  .modal-player iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+  .modal-player .player-info { padding: 14px 18px; background: var(--surface); }
+  .modal-player .player-info h3 { font-size: 16px; }
+  .modal-player .player-info p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* Loading */
+  .loading {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 60px 20px; color: var(--text2);
+  }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state h3 { font-size: 16px; margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; }
+
+  /* Filters bar */
+  .filters {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 16px;
+  }
+  .filters .pill {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text2); cursor: pointer;
+    font-size: 12px; font-weight: 600; transition: all .15s;
+  }
+  .filters .pill:hover { border-color: var(--accent2); color: var(--text); }
+  .filters .pill.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .filters .count { font-size: 12px; color: var(--text2); margin-left: auto; }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .country-code { font-size: 10px; color: var(--text2); text-transform: uppercase; }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .sport-grid { grid-template-columns: 1fr; }
+    .channel-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    .container { padding: 12px 8px; }
+    .nav .logo { font-size: 16px; margin-right: 8px; }
+    .nav a { padding: 12px 10px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="logo">Stream<span>Hub</span></div>
+  <a href="#" class="active" data-section="movies">Movies & TV</a>
+  <a href="#" data-section="sports">Sports</a>
+  <a href="#" data-section="livetv">Live TV</a>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════ MOVIES & TV ═══════════════ -->
+<div class="section active" id="section-movies">
+  <div class="section-header">
+    <h2>Movies & TV Shows</h2>
+    <span class="sub">Browse · Search · Watch</span>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="trending">Trending</button>
+    <button data-tab="movie">Movies</button>
+    <button data-tab="tv">TV Shows</button>
+    <button data-tab="search">Search</button>
+  </div>
+
+  <!-- Search -->
+  <div id="movie-search-area" style="display:none;">
+    <div class="search-box">
+      <input type="text" id="movie-search-input" placeholder="Search movies & TV shows..." onkeydown="if(event.key==='Enter') movieSearch()">
+      <select id="movie-type-select">
+        <option value="multi">All</option>
+        <option value="movie">Movies</option>
+        <option value="tv">TV Shows</option>
+      </select>
+      <button onclick="movieSearch()">Search</button>
+    </div>
+  </div>
+
+  <div id="movie-content">
+    <div class="loading"><div class="spinner"></div><span>Loading...</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SPORTS ═══════════════ -->
+<div class="section" id="section-sports">
+  <div class="section-header">
+    <h2>Sports</h2>
+    <span class="sub">Live & Upcoming Matches</span>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-stab="live">Live Now</button>
+    <button data-stab="today">Today</button>
+    <button data-stab="all">All Matches</button>
+  </div>
+
+  <div class="filters" id="sport-filters"></div>
+
+  <div id="sports-content">
+    <div class="loading"><div class="spinner"></div><span>Loading matches...</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LIVE TV ═══════════════ -->
+<div class="section" id="section-livetv">
+  <div class="section-header">
+    <h2>Live TV</h2>
+    <span class="sub" id="channel-count">Loading channels...</span>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="tv-search-input" placeholder="Search channels..." onkeydown="if(event.key==='Enter') filterChannels()">
+    <select id="tv-country-select">
+      <option value="all">All Countries</option>
+    </select>
+    <button onclick="filterChannels()">Filter</button>
+  </div>
+
+  <div id="tv-content">
+    <div class="loading"><div class="spinner"></div><span>Loading channels...</span></div>
+  </div>
+</div>
+
+</div>
+
+<!-- Player Modal -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal-player">
+    <button class="close-btn" onclick="closePlayer()">&times;</button>
+    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    <div class="player-info">
+      <h3 id="playerTitle">Now Playing</h3>
+      <p id="playerDesc"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// CONFIG – set your API keys here
+// ════════════════════════════════════════════
+const CONFIG = {
+  TMDB_KEY: '', // Get free at https://www.themoviedb.org/settings/api
+  TMDB_LANG: 'en-US',
+};
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + a.dataset.section).classList.add('active');
+  });
+});
+
+// ════════════════════════════════════════════
+// TMDB API HELPERS
+// ════════════════════════════════════════════
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+
+async function tmdbFetch(url) {
+  if (!CONFIG.TMDB_KEY) throw new Error('TMDB_API_KEY missing');
+  const r = await fetch(`${url}${url.includes('?')?'&':'?'}api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.TMDB_LANG}`);
+  if (!r.ok) throw new Error('TMDB error ' + r.status);
+  return r.json();
+}
+
+function tmdbImage(path, size='w342') {
+  return path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
+}
+
+// ════════════════════════════════════════════
+// MOVIES / TV
+// ════════════════════════════════════════════
+const MOVIE_TABS = ['trending', 'movie', 'tv', 'search'];
+let currentMovieTab = 'trending';
+let moviePage = 1;
+
+document.querySelectorAll('#section-movies .tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#section-movies .tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMovieTab = btn.dataset.tab;
+    moviePage = 1;
+    document.getElementById('movie-search-area').style.display = currentMovieTab === 'search' ? 'block' : 'none';
+    loadMovies();
+  });
+});
+
+async function loadMovies() {
+  const el = document.getElementById('movie-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+
+  try {
+    let data;
+    if (currentMovieTab === 'search') {
+      const q = document.getElementById('movie-search-input').value.trim();
+      if (!q) { el.innerHTML = '<div class="empty-state"><h3>Search movies & TV shows</h3><p>Type a title above and hit Search</p></div>'; return; }
+      const type = document.getElementById('movie-type-select').value;
+      data = await tmdbFetch(`${TMDB_BASE}/search/${type}?query=${encodeURIComponent(q)}&page=${moviePage}`);
+    } else if (currentMovieTab === 'trending') {
+      data = await tmdbFetch(`${TMDB_BASE}/trending/all/week?page=${moviePage}`);
+    } else {
+      data = await tmdbFetch(`${TMDB_BASE}/${currentMovieTab === 'movie' ? 'movie' : 'tv'}/popular?page=${moviePage}`);
+    }
+
+    if (!data.results || data.results.length === 0) {
+      el.innerHTML = '<div class="empty-state"><h3>No results</h3><p>Try a different search</p></div>';
+      return;
+    }
+
+    let html = '<div class="grid">';
+    for (const item of data.results) {
+      const title = item.title || item.name || 'Unknown';
+      const date = (item.release_date || item.first_air_date || '').slice(0,4);
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      const poster = tmdbImage(item.poster_path, 'w342');
+      const voteAvg = item.vote_average ? item.vote_average.toFixed(1) : '';
+      const tmdbId = item.id;
+
+      html += `<div class="grid-item" onclick="openMedia('${type}','${tmdbId}','${encodeURIComponent(title)}')">
+        <div class="poster">${poster ? `<img src="${poster}" alt="${title}" loading="lazy">` : '🎬'}</div>
+        <div class="meta">
+          <div class="title">${title}</div>
+          <div class="subtitle">${date}${voteAvg ? ' · ★ ' + voteAvg : ''}</div>
+          <span class="badge ${type}">${type === 'movie' ? 'MOVIE' : 'TV'}</span>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+
+    if (data.total_pages > 1) {
+      html += `<div style="text-align:center;padding:20px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="pill" onclick="moviePage--;loadMovies()" ${moviePage<=1?'disabled':''}>← Prev</button>
+        <span style="font-size:13px;color:var(--text2);padding:6px 12px;">Page ${moviePage} of ${data.total_pages}</span>
+        <button class="pill" onclick="moviePage++;loadMovies()" ${moviePage>=data.total_pages?'disabled':''}>Next →</button>
+      </div>`;
+    }
+
+    el.innerHTML = html;
+  } catch (e) {
+    if (e.message === 'TMDB_API_KEY missing') {
+      el.innerHTML = `<div class="empty-state">
+        <h3>TMDB API Key Required</h3>
+        <p>Get a free key at <a href="https://www.themoviedb.org/settings/api" target="_blank" style="color:var(--accent2)">themoviedb.org/settings/api</a><br>
+        Then set <code style="background:var(--surface2);padding:2px 6px;border-radius:3px;">CONFIG.TMDB_KEY</code> in the script.</p>
+      </div>`;
+    } else {
+      el.innerHTML = `<div class="empty-state"><h3>Error loading</h3><p>${e.message}</p></div>`;
+    }
+  }
+}
+
+function movieSearch() { moviePage = 1; loadMovies(); }
+
+function openMedia(type, id, title) {
+  const decoded = decodeURIComponent(title);
+  if (type === 'movie') {
+    openPlayer(`https://vidsync.live/embed/movie/${id}?autoPlay=true`, decoded, 'Movie');
+  } else {
+    openPlayer(`https://vidsync.live/embed/tv/${id}/1/1?autoPlay=true&autoNext=true`, decoded, 'TV Show (S1 E1)');
+  }
+}
+
+// ════════════════════════════════════════════
+// PLAYER
+// ════════════════════════════════════════════
+function openPlayer(url, title, desc) {
+  document.getElementById('playerFrame').src = url;
+  document.getElementById('playerTitle').textContent = title || 'Now Playing';
+  document.getElementById('playerDesc').textContent = desc || '';
+  document.getElementById('playerModal').classList.add('show');
+}
+
+function closePlayer() {
+  document.getElementById('playerFrame').src = '';
+  document.getElementById('playerModal').classList.remove('show');
+}
+document.getElementById('playerModal').addEventListener('click', function(e) {
+  if (e.target === this) closePlayer();
+});
+
+// ════════════════════════════════════════════
+// SPORTS (Streamed API)
+// ════════════════════════════════════════════
+const STREAMED = 'https://streamed.pk';
+let allMatches = [];
+let sportCategories = [];
+let activeSportFilter = null;
+let activeSportsTab = 'live';
+
+document.querySelectorAll('#section-sports .tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#section-sports .tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeSportsTab = btn.dataset.stab;
+    renderSports();
+  });
+});
+
+async function loadSports() {
+  // Fetch available sports
+  try {
+    const r = await fetch(`${STREAMED}/api/sports`);
+    sportCategories = await r.json();
+  } catch (e) { sportCategories = []; }
+
+  // Render filter pills
+  const fl = document.getElementById('sport-filters');
+  fl.innerHTML = `<button class="pill ${!activeSportFilter?'active':''}" onclick="activeSportFilter=null;renderSports()">All</button>`;
+  for (const s of sportCategories) {
+    fl.innerHTML += `<button class="pill ${activeSportFilter===s.id?'active':''}" onclick="activeSportFilter='${s.id}';renderSports()">${s.name}</button>`;
+  }
+
+  // Fetch matches
+  await fetchAllMatches();
+}
+
+async function fetchAllMatches() {
+  const el = document.getElementById('sports-content');
+  try {
+    let matches = [];
+    // Fetch live + today + all in parallel
+    const [liveData, todayData, allData] = await Promise.all([
+      fetch(`${STREAMED}/api/matches/live`).then(r => r.json()).catch(() => []),
+      fetch(`${STREAMED}/api/matches/all-today`).then(r => r.json()).catch(() => []),
+      fetch(`${STREAMED}/api/matches/all`).then(r => r.json()).catch(() => []),
+    ]);
+    matches = [...(Array.isArray(liveData)?liveData:[]), ...(Array.isArray(todayData)?todayData:[]), ...(Array.isArray(allData)?allData:[])];
+    // Deduplicate
+    const seen = new Set();
+    allMatches = matches.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+  } catch (e) {
+    console.warn('Sports fetch failed', e);
+    allMatches = [];
+  }
+  renderSports();
+}
+
+function renderSports() {
+  const el = document.getElementById('sports-content');
+
+  let filtered = [...allMatches];
+
+  // Filter by sport category
+  if (activeSportFilter) {
+    filtered = filtered.filter(m => m.category === activeSportFilter);
+  }
+
+  // Filter by tab
+  const now = Date.now();
+  if (activeSportsTab === 'live') {
+    // For live status, we approximate by checking if match date is within last 3 hours
+    filtered = filtered.filter(m => m.date >= now - 10800000 && m.date <= now + 3600000);
+  } else if (activeSportsTab === 'today') {
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
+    filtered = filtered.filter(m => m.date >= startOfDay.getTime() && m.date <= endOfDay.getTime());
+  }
+
+  // Sort by date
+  filtered.sort((a, b) => a.date - b.date);
+
+  // Update count
+  document.querySelector('#section-sports .filters .count')?.remove();
+  const fl = document.getElementById('sport-filters');
+  if (!fl.querySelector('.count')) {
+    const c = document.createElement('span');
+    c.className = 'count';
+    fl.appendChild(c);
+  }
+  fl.querySelector('.count').textContent = `${filtered.length} matches`;
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><h3>No matches found</h3><p>Try a different filter</p></div>';
+    return;
+  }
+
+  let html = '<div class="sport-grid">';
+  for (const m of filtered) {
+    const d = new Date(m.date);
+    const isLive = m.date >= now - 7200000 && m.date <= now;
+    const isUpcoming = m.date > now;
+    const statusClass = isLive ? 'live' : isUpcoming ? 'upcoming' : 'finished';
+    const statusText = isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'FINISHED';
+    const sName = sportCategories.find(s => s.id === m.category)?.name || m.category;
+
+    html += `<div class="sport-card" onclick="openSportStream('${m.id}')">
+      <div class="teams">
+        ${m.teams?.home ? `<div class="badge-img">${m.teams.home.badge ? `<img src="${STREAMED}/api/images/${m.teams.home.badge}" alt="">` : m.teams.home.name[0]}</div>` : ''}
+        <div class="team-name">${m.teams?.home?.name || '?'}</div>
+        <div class="vs">vs</div>
+        ${m.teams?.away ? `<div class="badge-img">${m.teams.away.badge ? `<img src="${STREAMED}/api/images/${m.teams.away.badge}" alt="">` : m.teams.away.name[0]}</div>` : ''}
+        <div class="team-name">${m.teams?.away?.name || '?'}</div>
+      </div>
+      <div class="match-info">
+        <span class="tag ${statusClass}">${statusText}</span>
+        <span>${sName}</span>
+        <span> · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+        ${m.sources?.length ? ` · ${m.sources.length} stream${m.sources.length>1?'s':''}` : ''}
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function openSportStream(matchId) {
+  const match = allMatches.find(m => m.id === matchId);
+  if (!match || !match.sources?.length) return;
+
+  // Try first source
+  const src = match.sources[0];
+  try {
+    const r = await fetch(`${STREAMED}/api/stream/${src.source}/${src.id}`);
+    const streams = await r.json();
+    if (streams.length > 0) {
+      openPlayer(streams[0].embedUrl, match.title, `${streams[0].language} · ${streams[0].hd ? 'HD' : 'SD'}`);
+    }
+  } catch (e) {
+    alert('Could not load stream');
+  }
+}
+
+// ════════════════════════════════════════════
+// LIVE TV (CDN Live TV API)
+// ════════════════════════════════════════════
+const CDNTV = 'https://api.cdnlivetv.tv/api/v1';
+let allChannels = [];
+let tvFilterText = '';
+let tvFilterCountry = 'all';
+
+async function loadTVChannels() {
+  const el = document.getElementById('tv-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading channels...</span></div>';
+
+  try {
+    const r = await fetch(`${CDNTV}/channels/?user=cdnlivetv&plan=free`);
+    const data = await r.json();
+    allChannels = data.channels || [];
+
+    // Build country filter
+    const countries = [...new Set(allChannels.map(c => c.code).filter(Boolean))].sort();
+    const sel = document.getElementById('tv-country-select');
+    sel.innerHTML = '<option value="all">All Countries</option>';
+    for (const code of countries) {
+      sel.innerHTML += `<option value="${code}">${code.toUpperCase()}</option>`;
+    }
+
+    document.getElementById('channel-count').textContent = `${allChannels.length} channels`;
+    renderChannels();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><h3>Failed to load channels</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function filterChannels() {
+  tvFilterText = document.getElementById('tv-search-input').value.trim().toLowerCase();
+  tvFilterCountry = document.getElementById('tv-country-select').value;
+  renderChannels();
+}
+
+function renderChannels() {
+  const el = document.getElementById('tv-content');
+
+  let filtered = allChannels.filter(c => {
+    if (tvFilterText && !c.name.toLowerCase().includes(tvFilterText)) return false;
+    if (tvFilterCountry !== 'all' && c.code !== tvFilterCountry) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><h3>No channels found</h3><p>Try a different search</p></div>';
+    return;
+  }
+
+  let html = '<div class="channel-grid">';
+  // Show online first
+  filtered.sort((a, b) => (a.status === 'online' ? 0 : 1) - (b.status === 'online' ? 0 : 1));
+  for (const ch of filtered.slice(0, 200)) { // limit display
+    html += `<div class="channel-card" onclick="openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')">
+      <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.outerHTML='${ch.name[0]}'">` : ch.name[0]}</div>
+      <div class="ch-name">${ch.name}</div>
+      <div class="ch-status ${ch.status === 'online' ? 'online' : 'offline'}">${ch.status === 'online' ? '● LIVE' : '○ Offline'}</div>
+      <div class="country-code">${ch.code?.toUpperCase()}</div>
+    </div>`;
+  }
+  html += '</div>';
+  if (filtered.length > 200) html += `<div style="text-align:center;padding:12px;font-size:13px;color:var(--text2)">Showing 200 of ${filtered.length} channels</div>`;
+  el.innerHTML = html;
+}
+
+function openTVChannel(name, code) {
+  const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(name.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
+  openPlayer(url, decodeURIComponent(name), 'Live TV');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+loadMovies();
+loadSports();
+loadTVChannels();
+</script>
+</body>
+</html>
