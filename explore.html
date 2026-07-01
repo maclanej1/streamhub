@@ -1213,7 +1213,10 @@ function openTVChannel(name, code) {
   const custom = CUSTOM_CHANNEL_URLS[decoded];
   if (custom) { openPlayer(custom.url, decoded, 'Live TV', custom.sandbox); return; }
   const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
-  openPlayer(url, decoded, 'Live TV');
+  fetch(url).then(r => r.text()).then(html => {
+    const patched = html.replace('maxBufferLength:30','maxBufferLength:120').replace('maxMaxBufferLength:60','maxMaxBufferLength:300');
+    openPlayer(URL.createObjectURL(new Blob([patched],{type:'text/html'})), decoded, 'Live TV');
+  }).catch(() => openPlayer(url, decoded, 'Live TV'));
 }
 
 loadMovieHome();
