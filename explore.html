@@ -185,12 +185,25 @@
   .tabs button.active { background: var(--accent); color: #fff; }
 
   .sport-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-  .sport-card { background: var(--card-bg); border-radius: var(--radius); padding: 14px 16px; border: 1px solid var(--border); transition: var(--transition); cursor: pointer; }
+  .sport-card {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 14px 16px; border: 1px solid var(--border);
+    transition: var(--transition); cursor: pointer;
+    position: relative; overflow: hidden;
+    min-height: 80px;
+  }
   .sport-card:hover { border-color: rgba(255,255,255,0.1); background: var(--surface); transform: translateY(-2px); }
+  .sport-card .sport-bg {
+    position: absolute; inset: 0; opacity: 0.07;
+    background-size: cover; background-position: center;
+    transition: var(--transition);
+  }
+  .sport-card:hover .sport-bg { opacity: 0.12; }
+  .sport-card .sport-content { position: relative; z-index: 1; }
   .sport-card .teams { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .sport-card .teams .badge-img { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text2); overflow: hidden; }
+  .sport-card .teams .badge-img { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text2); overflow: hidden; flex-shrink: 0; }
   .sport-card .teams .badge-img img { width: 100%; height: 100%; object-fit: cover; }
-  .sport-card .teams .vs { font-size: 12px; color: var(--text2); }
+  .sport-card .teams .vs { font-size: 12px; color: var(--text2); flex-shrink: 0; }
   .sport-card .teams .team-name { font-size: 14px; font-weight: 600; }
   .sport-card .match-info { font-size: 12px; color: var(--text2); }
   .sport-card .match-info .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; text-transform: uppercase; }
@@ -626,17 +639,21 @@ function renderSports() {
     const sc = isLive ? 'live' : isUpcoming ? 'upcoming' : 'finished';
     const st = isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'FINISHED';
     const sName = sportCategories.find(s => s.id === m.category)?.name || m.category;
+    const posterPath = m.poster ? `${STREAMED}${m.poster}` : null;
     html += `<div class="sport-card" onclick="openSportStream('${m.id}')">
-      <div class="teams">
-        ${m.teams?.home ? `<div class="badge-img">${m.teams.home.badge ? `<img src="${STREAMED}/api/images/${m.teams.home.badge}" alt="">` : m.teams.home.name[0]}</div>` : ''}
-        <div class="team-name">${m.teams?.home?.name || '?'}</div>
-        <div class="vs">vs</div>
-        ${m.teams?.away ? `<div class="badge-img">${m.teams.away.badge ? `<img src="${STREAMED}/api/images/${m.teams.away.badge}" alt="">` : m.teams.away.name[0]}</div>` : ''}
-        <div class="team-name">${m.teams?.away?.name || '?'}</div>
-      </div>
-      <div class="match-info">
-        <span class="tag ${sc}">${st}</span><span>${sName}</span><span> · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-        ${m.sources?.length ? ` · ${m.sources.length} stream${m.sources.length>1?'s':''}` : ''}
+      ${posterPath ? `<div class="sport-bg" style="background-image:url('${posterPath}')"></div>` : ''}
+      <div class="sport-content">
+        <div class="teams">
+          ${m.teams?.home ? `<div class="badge-img">${m.teams.home.badge ? `<img src="${STREAMED}/api/images/proxy/${m.teams.home.badge}.webp" alt="" loading="lazy" onerror="this.closest('.badge-img').innerHTML='${m.teams.home.name[0].replace(/'/g,'')}'">` : m.teams.home.name[0]}</div>` : ''}
+          <div class="team-name">${m.teams?.home?.name || '?'}</div>
+          <div class="vs">vs</div>
+          ${m.teams?.away ? `<div class="badge-img">${m.teams.away.badge ? `<img src="${STREAMED}/api/images/proxy/${m.teams.away.badge}.webp" alt="" loading="lazy" onerror="this.closest('.badge-img').innerHTML='${m.teams.away.name[0].replace(/'/g,'')}'">` : m.teams.away.name[0]}</div>` : ''}
+          <div class="team-name">${m.teams?.away?.name || '?'}</div>
+        </div>
+        <div class="match-info">
+          <span class="tag ${sc}">${st}</span><span>${sName}</span><span> · ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+          ${m.sources?.length ? ` · ${m.sources.length} stream${m.sources.length>1?'s':''}` : ''}
+        </div>
       </div>
     </div>`;
   }
@@ -694,7 +711,7 @@ function renderChannels() {
   filtered.sort((a, b) => (a.status === 'online' ? 0 : 1) - (b.status === 'online' ? 0 : 1));
   for (const ch of filtered.slice(0, 200)) {
     html += `<div class="channel-card" onclick="openTVChannel('${encodeURIComponent(ch.name)}','${ch.code}')">
-      <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.outerHTML='${ch.name[0]}'">` : ch.name[0]}</div>
+      <div class="ch-logo">${ch.image ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" onerror="this.closest('.ch-logo').innerHTML='${ch.name[0].replace(/'/g,"")}'">` : ch.name[0]}</div>
       <div class="ch-name">${ch.name}</div>
       <div class="ch-status ${ch.status === 'online' ? 'online' : 'offline'}">${ch.status === 'online' ? '● LIVE' : '○ Offline'}</div>
       <div class="country-code">${ch.code?.toUpperCase()}</div>
@@ -706,8 +723,9 @@ function renderChannels() {
 }
 
 function openTVChannel(name, code) {
-  const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(name.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
-  openPlayer(url, decodeURIComponent(name), 'Live TV');
+  const decoded = decodeURIComponent(name);
+  const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
+  openPlayer(url, decoded, 'Live TV');
 }
 
 loadMovieHome();
