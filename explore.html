@@ -486,7 +486,7 @@
 <div class="modal-overlay" id="playerModal">
   <div class="modal-player">
     <button class="close-btn" onclick="closePlayer()">&times;</button>
-    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     <div class="player-info">
       <h3 id="playerTitle">Now Playing</h3>
       <p id="playerDesc"></p>
@@ -758,11 +758,8 @@ function openMedia(type, id, title) {
   else openPlayer(`https://vidsync.live/embed/tv/${id}/1/1?autoPlay=true&autoNext=true`, d, 'TV Show (S1 E1)');
 }
 
-function openPlayer(url, title, desc, sandbox) {
+function openPlayer(url, title, desc) {
   const frame = document.getElementById('playerFrame');
-  if (sandbox === '') frame.removeAttribute('sandbox');
-  else if (sandbox) frame.setAttribute('sandbox', sandbox);
-  else frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
   frame.src = url;
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
