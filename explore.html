@@ -760,7 +760,8 @@ function openMedia(type, id, title) {
 
 function openPlayer(url, title, desc, sandbox) {
   const frame = document.getElementById('playerFrame');
-  if (sandbox) frame.setAttribute('sandbox', sandbox);
+  if (sandbox === '') frame.removeAttribute('sandbox');
+  else if (sandbox) frame.setAttribute('sandbox', sandbox);
   else frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
   frame.src = url;
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
@@ -1022,7 +1023,7 @@ function renderChannels() {
 }
 
 const CUSTOM_CHANNEL_URLS = {
-  'Fox Sports 502': { url: 'https://ntvs.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb25ZVFVLZndZRmd5RjAzZXRNSmRYZEl4ZWp5bUlEUmdaNm83QWhFZ2ZscnA1RTJoaWFVaWRCaHM0V1JjaUcvV2VoZkJ1SmlYbEZWWjZ0UWlESVZSTHlRPT0~', sandbox: 'allow-scripts allow-same-origin allow-forms allow-popups allow-presentation' },
+  'Fox Sports 502': { url: 'https://ntvs.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb25ZVFVLZndZRmd5RjAzZXRNSmRYZEl4ZWp5bUlEUmdaNm83QWhFZ2ZscnA1RTJoaWFVaWRCaHM0V1JjaUcvV2VoZkJ1SmlYbEZWWjZ0UWlESVZSTHlRPT0~', sandbox: '' },
 };
 
 function openTVChannel(name, code) {
