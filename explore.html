@@ -758,8 +758,11 @@ function openMedia(type, id, title) {
   else openPlayer(`https://vidsync.live/embed/tv/${id}/1/1?autoPlay=true&autoNext=true`, d, 'TV Show (S1 E1)');
 }
 
-function openPlayer(url, title, desc) {
-  document.getElementById('playerFrame').src = url;
+function openPlayer(url, title, desc, sandbox) {
+  const frame = document.getElementById('playerFrame');
+  if (sandbox) frame.setAttribute('sandbox', sandbox);
+  else frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+  frame.src = url;
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
   document.getElementById('playerModal').classList.add('show');
@@ -1019,13 +1022,13 @@ function renderChannels() {
 }
 
 const CUSTOM_CHANNEL_URLS = {
-  'Fox Sports 502': 'https://ntvs.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb25ZVFVLZndZRmd5RjAzZXRNSmRYZEl4ZWp5bUlEUmdaNm83QWhFZ2ZscnA1RTJoaWFVaWRCaHM0V1JjaUcvV2VoZkJ1SmlYbEZWWjZ0UWlESVZSTHlRPT0~',
+  'Fox Sports 502': { url: 'https://ntvs.cx/embed?t=TVhpbmcyU0I1MVc3V3RtQm9STU1JRnllbnVSbkttVUtvZFcyNlNNSDJ3VnVMWjU4V3hHeDc3Mk5Nc2J5bjhLb25ZVFVLZndZRmd5RjAzZXRNSmRYZEl4ZWp5bUlEUmdaNm83QWhFZ2ZscnA1RTJoaWFVaWRCaHM0V1JjaUcvV2VoZkJ1SmlYbEZWWjZ0UWlESVZSTHlRPT0~', sandbox: 'allow-scripts allow-same-origin allow-forms allow-popups allow-presentation' },
 };
 
 function openTVChannel(name, code) {
   const decoded = decodeURIComponent(name);
   const custom = CUSTOM_CHANNEL_URLS[decoded];
-  if (custom) { openPlayer(custom, decoded, 'Live TV'); return; }
+  if (custom) { openPlayer(custom.url, decoded, 'Live TV', custom.sandbox); return; }
   const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
   openPlayer(url, decoded, 'Live TV');
 }
