@@ -764,6 +764,8 @@ function openPlayer(url, title, desc) {
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
   document.getElementById('playerModal').classList.add('show');
+  // Ensure sandbox is always removed (streamed.pk rejects it)
+  setTimeout(() => frame.removeAttribute('sandbox'), 100);
 }
 
 function closePlayer() {
@@ -878,7 +880,7 @@ async function openSportStream(matchId) {
   });
   // If only one option, play directly
   if (allStreams.length === 1) {
-    openPlayer(allStreams[0].embedUrl, match.title, `${allStreams[0].hd ? 'HD' : 'SD'} · ${allStreams[0].sourceLabel}`);
+    window.location.href = allStreams[0].embedUrl;
     return;
   }
   // Show picker
@@ -889,7 +891,7 @@ async function openSportStream(matchId) {
   for (const s of allStreams) {
     const label = s.hd ? `<span class="hd-badge">HD</span>` : `<span class="sd-badge">SD</span>`;
     const srcLabel = s.sourceLabel || s.source || 'stream';
-    listHtml += `<button class="stream-opt" onclick="openPlayer('${s.embedUrl}','${title.replace(/'/g,'')}','${s.hd ? 'HD' : 'SD'} · ${srcLabel}');closeStreamPicker()">
+    listHtml += `<button class="stream-opt" onclick="window.location.href='${s.embedUrl}'">
       <span>${srcLabel} #${s.streamNo || 1} ${s.hd ? 'HD' : 'SD'}</span>
       ${label}
     </button>`;
