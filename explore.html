@@ -755,7 +755,7 @@ async function movieSearch() {
 const MEDIA_SERVERS = [
   { name: 'VidSync',   movie: id => `https://vidsync.live/embed/movie/${id}?autoPlay=true`,            tv: (id,s,e) => `https://vidsync.live/embed/tv/${id}/${s}/${e}?autoPlay=true&autoNext=true`, quality: '1080p' },
   { name: 'VidSrc',    movie: id => `https://vidsrc.to/embed/movie/${id}`,                            tv: (id,s,e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,                          quality: '1080p' },
-  { name: 'Embed API', movie: id => `http://player.embed-api.stream/?id=${id}`,                       tv: (id,s,e) => `http://player.embed-api.stream/?id=${id}&s=${s}&e=${e}`,                 quality: '4K' },
+  { name: 'Embed API', movie: id => `https://player.embed-api.stream/?id=${id}`,                      tv: (id,s,e) => `https://player.embed-api.stream/?id=${id}&s=${s}&e=${e}`,                quality: '4K' },
   { name: 'Embed SU',  movie: id => `https://embed.su/embed/movie/${id}`,                            tv: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}`,                                 quality: '1080p' },
 ];
 
