@@ -752,10 +752,31 @@ async function movieSearch() {
   } catch (e) { el.innerHTML = `<div class="empty-state"><h3>Search error</h3><p>${e.message}</p></div>`; }
 }
 
+const MEDIA_SERVERS = [
+  { name: 'VidSync',   movie: id => `https://vidsync.live/embed/movie/${id}?autoPlay=true`,            tv: (id,s,e) => `https://vidsync.live/embed/tv/${id}/${s}/${e}?autoPlay=true&autoNext=true`, quality: '1080p' },
+  { name: 'VidSrc',    movie: id => `https://vidsrc.to/embed/movie/${id}`,                            tv: (id,s,e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,                          quality: '1080p' },
+  { name: 'Embed API', movie: id => `http://player.embed-api.stream/?id=${id}`,                       tv: (id,s,e) => `http://player.embed-api.stream/?id=${id}&s=${s}&e=${e}`,                 quality: '4K' },
+  { name: 'Embed SU',  movie: id => `https://embed.su/embed/movie/${id}`,                            tv: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}`,                                 quality: '1080p' },
+];
+
 function openMedia(type, id, title) {
   const d = decodeURIComponent(title);
-  if (type === 'movie') openPlayer(`https://vidsync.live/embed/movie/${id}?autoPlay=true`, d, 'Movie');
-  else openPlayer(`https://vidsync.live/embed/tv/${id}/1/1?autoPlay=true&autoNext=true`, d, 'TV Show (S1 E1)');
+  const servers = MEDIA_SERVERS.map(s => ({
+    ...s,
+    url: type === 'movie' ? s.movie(id) : s.tv(id, 1, 1),
+  }));
+  document.getElementById('sp-title').textContent = d;
+  document.getElementById('sp-sub').textContent = `${servers.length} servers available`;
+  let listHtml = '';
+  for (const s of servers) {
+    const fmt = type === 'movie' ? 'Movie' : 'TV';
+    listHtml += `<button class="stream-opt" onclick="closeStreamPicker();openPlayer('${s.url.replace(/'/g,"\\'")}','${d.replace(/'/g,"\\'")}','${fmt}')">
+      <span>${s.name}</span>
+      <span class="hd-badge">${s.quality}</span>
+    </button>`;
+  }
+  document.getElementById('sp-list').innerHTML = listHtml;
+  document.getElementById('streamPicker').classList.add('show');
 }
 
 function openPlayer(url, title, desc) {
@@ -1038,6 +1059,48 @@ const CUSTOM_LOGOS = {
   // International
   'fox life international': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/fox-life-int.png',
   'fix and foxi international': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/fix-and-foxi-int.png',
+  // Abu Dhabi
+  'abu dhabi sports 1': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-arab-emirates/abu-dhabi-sports-tv-ae.png',
+  'abu dhabi sports tv': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-arab-emirates/abu-dhabi-sports-tv-ae.png',
+  'abu dhabi tv': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-arab-emirates/abu-dhabi-tv-ae.png',
+  // Altitude
+  'altitude': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/altitude-sports-us.png',
+  'altitude sports': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/altitude-sports-us.png',
+  // Arena Sport
+  'arena sport 1': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-1-hr.png',
+  'arena sport 2': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-2-hr.png',
+  'arena sport 3': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-3-hr.png',
+  'arena sport 4': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-4-hr.png',
+  'arena sport 5': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-5-hr.png',
+  'arena sport 6': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-6-hr.png',
+  'arena sport 7': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-7-hr.png',
+  'arena sport 8': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-8-hr.png',
+  'arena sport 9': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-9-hr.png',
+  'arena sport 10': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/croatia/arena-sport-10-hr.png',
+  // BBC
+  'bbc one': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-one-uk.png',
+  'bbc two': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-two-uk.png',
+  'bbc three': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-three-uk.png',
+  'bbc four': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-four-uk.png',
+  'bbc news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-news-uk.png',
+  'bbc world news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-world-news-uk.png',
+  'bbc parliament': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-parliament-uk.png',
+  'bbc alba': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-alba-uk.png',
+  'bbc scotland': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-scotland-uk.png',
+  'bbc cbeebies': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-cbeebies-uk.png',
+  'bbc cbbc': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-cbbc-uk.png',
+  'bbc red button': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-red-button-uk.png',
+  'bbc uhd': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-uhd-uk.png',
+  'bbc america': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/bbc-america-us.png',
+  'bbc earth': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-earth-uk.png',
+  'bbc first': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-first-au.png',
+  'bbc brit': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-brit-uk.png',
+  // CBS Sports
+  'cbs': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cbs-sports-us.png',
+  'cbs sports': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cbs-sports-us.png',
+  'cbs sports network': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cbs-sports-network-us.png',
+  'cbs sports hq': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cbs-sports-hq-us.png',
+  'cbs sports golazo network': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cbs-sports-golazo-network-us.png',
 };
 let channelLogoMap = {};
 
