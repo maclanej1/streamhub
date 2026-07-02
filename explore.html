@@ -859,6 +859,9 @@ function isMediaUrl(url) {
   if (url.match(/\/\d{4,}$/)) return true;
   return false;
 }
+function proxyUrl(u) {
+  return (location.protocol === 'https:' && u.startsWith('http://')) ? CORS_PROXY + encodeURIComponent(u) : u;
+}
 function openPlayer(url, title, desc) {
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
@@ -866,29 +869,21 @@ function openPlayer(url, title, desc) {
   const video = document.getElementById('hlsPlayer');
   const errEl = document.getElementById('playerError');
   errEl.style.display = 'none';
-  // Upgrade HTTP to HTTPS for mixed content safety
-  if (location.protocol === 'https:' && url.startsWith('http://')) {
-    const httpsUrl = url.replace('http://', 'https://');
-    // Prefer https but keep original as fallback
-    if (url.includes('.m3u8') || isMediaUrl(url)) {
-      url = httpsUrl; // HLS.js handles fallback, video element will too
-    }
-  }
   if (url.includes('.m3u8') || isMediaUrl(url)) {
     frame.style.display = 'none';
     video.style.display = 'block';
     video.removeAttribute('src');
     if (video._hls) { video._hls.destroy(); video._hls = null; }
-    const tryHls = typeof Hls !== 'undefined' && Hls.isSupported();
-    if (tryHls) {
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       const hls = new Hls();
       video._hls = hls;
-      hls.loadSource(url);
+      hls.loadSource(proxyUrl(url));
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
       hls.on(Hls.Events.ERROR, (e, data) => {
-        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        if (data.fatal) {
           hls.destroy(); video._hls = null;
+          // Fallback: try native video with direct URL (works for .ts on Safari/Chrome)
           video.src = url; video.load(); video.play().catch(() => errEl.style.display = 'block');
         }
       });
@@ -1050,6 +1045,7 @@ function closeStreamPicker() {
 document.getElementById('streamPicker').addEventListener('click', function(e) { if (e.target === this) closeStreamPicker(); });
 
 const CDNTV = 'https://api.cdnlivetv.tv/api/v1';
+const CORS_PROXY = 'https://corsproxy.io/?url=';
 let allChannels = [];
 let tvFilterText = '';
 let tvFilterCountry = 'all';
