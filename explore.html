@@ -488,7 +488,8 @@
   <div class="modal-player">
     <button class="close-btn" onclick="closePlayer()">&times;</button>
     <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:block"></iframe>
-    <video id="hlsPlayer" controls autoplay style="display:none;width:100%;aspect-ratio:16/9;background:#000"></video>
+    <video id="hlsPlayer" controls autoplay playsinline crossorigin="anonymous" style="display:none;width:100%;aspect-ratio:16/9;background:#000"></video>
+    <div id="playerError" style="display:none;color:var(--text2);text-align:center;padding:40px">Stream unavailable. Try again later.</div>
     <div class="player-info">
       <h3 id="playerTitle">Now Playing</h3>
       <p id="playerDesc"></p>
@@ -863,21 +864,38 @@ function openPlayer(url, title, desc) {
   document.getElementById('playerDesc').textContent = desc || '';
   const frame = document.getElementById('playerFrame');
   const video = document.getElementById('hlsPlayer');
+  const errEl = document.getElementById('playerError');
+  errEl.style.display = 'none';
+  // Upgrade HTTP to HTTPS for mixed content safety
+  if (location.protocol === 'https:' && url.startsWith('http://')) {
+    const httpsUrl = url.replace('http://', 'https://');
+    // Prefer https but keep original as fallback
+    if (url.includes('.m3u8') || isMediaUrl(url)) {
+      url = httpsUrl; // HLS.js handles fallback, video element will too
+    }
+  }
   if (url.includes('.m3u8') || isMediaUrl(url)) {
     frame.style.display = 'none';
     video.style.display = 'block';
     video.removeAttribute('src');
-    if (url.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
-      if (video._hls) video._hls.destroy();
+    if (video._hls) { video._hls.destroy(); video._hls = null; }
+    const tryHls = typeof Hls !== 'undefined' && Hls.isSupported();
+    if (tryHls) {
       const hls = new Hls();
       video._hls = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hls.destroy(); video._hls = null;
+          video.src = url; video.load(); video.play().catch(() => errEl.style.display = 'block');
+        }
+      });
     } else {
-      video.src = url;
-      video.play().catch(() => {});
+      video.src = url; video.load(); video.play().catch(() => errEl.style.display = 'block');
     }
+    video.onerror = () => errEl.style.display = 'block';
   } else {
     video.style.display = 'none';
     video.pause(); video.src = '';
