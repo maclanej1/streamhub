@@ -1031,7 +1031,7 @@ let tvFilterText = '';
 let tvFilterCountry = 'all';
 const CATEGORY_KEYWORDS = [
   { id: 'news', label: 'News', keywords: ['news','cnn','bbc','fox news','sky news','nbc','cbs','abc news','msnbc','bloomberg','cnbc','al jazeera','nhk','dw','france 24','cspan','pbs','euronews','cbc news','i24','rai news','rtl','ntv news','franceinfo'] },
-  { id: 'sports', label: 'Sports', keywords: ['espn','sport','fox sports','bein','nfl','nba','mlb','nhl','ufc','wwe','eurosport','olympics','motorsport','f1','formula','moto','racing','tnt sports','sky sports','premier league','laliga','serie a','bundesliga','liga','cricket','tennis','golf','ncaa','sportsnet','tsn','dazn','stadium','redzone'] },
+  { id: 'sports', label: 'Sports', keywords: ['espn','sport','fox sports','fs1','fs2','bein','nfl','nba','mlb','nhl','ufc','wwe','eurosport','olympics','motorsport','f1','formula','moto','racing','tnt sports','sky sports','premier league','laliga','serie a','bundesliga','liga','cricket','tennis','golf','ncaa','sportsnet','tsn','dazn','stadium','redzone'] },
   { id: 'kids', label: 'Kids', keywords: ['cartoon','nick','disney','kids','baby','boomerang','pogo','cbeebies','dreamworks','pbs kids','teen','family','disney channel','nicktoons'] },
   { id: 'movies', label: 'Movies', keywords: ['movie','cinema','hbo','showtime','starz','fxm','tcm','hallmark','lifetime movie'] },
   { id: 'music', label: 'Music', keywords: ['mtv','vh1','music','cmt','bet','concert','tiktok','stingray','radio','dance','club','triller','revolt'] },
@@ -1062,6 +1062,8 @@ const CUSTOM_LOGOS = {
   'fox soul': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-soul-us.png',
   'fox sports 1': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-1-us.png',
   'fox sports 2': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-2-us.png',
+  'fs1 uhd': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-1-us.png',
+  'fs2 uhd': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-sports-2-us.png',
   'fox soccer plus': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-soccer-plus-us.png',
   // Australia
   'fox 8': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/australia/fox-8-au.png',
@@ -1224,6 +1226,8 @@ async function loadTVChannels() {
       { name: 'BBC World', code: 'gb', status: 'online', _custom: true },
       { name: 'BBC News HD', code: 'gb', status: 'online', _custom: true },
       { name: 'BBC News UK', code: 'gb', status: 'online', _custom: true },
+      { name: 'FS1 UHD', code: 'us', status: 'online', _custom: true },
+      { name: 'FS2 UHD', code: 'us', status: 'online', _custom: true },
     ];
     for (const cc of CUSTOM_CHANNELS) {
       if (!allChannels.some(c => c.name.toLowerCase() === cc.name.toLowerCase())) {
