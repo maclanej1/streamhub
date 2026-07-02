@@ -6,6 +6,7 @@
 <title>StreamHub — Movies, TV, Sports & Live TV</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
   :root {
     --bg: #0f1014;
@@ -486,7 +487,8 @@
 <div class="modal-overlay" id="playerModal">
   <div class="modal-player">
     <button class="close-btn" onclick="closePlayer()">&times;</button>
-    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    <iframe id="playerFrame" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:block"></iframe>
+    <video id="hlsPlayer" controls autoplay style="display:none;width:100%;aspect-ratio:16/9;background:#000"></video>
     <div class="player-info">
       <h3 id="playerTitle">Now Playing</h3>
       <p id="playerDesc"></p>
@@ -752,6 +754,92 @@ async function movieSearch() {
   } catch (e) { el.innerHTML = `<div class="empty-state"><h3>Search error</h3><p>${e.message}</p></div>`; }
 }
 
+const CONSUMET_BASE = 'https://api.consumet.org';
+const CONSUMET_PROVIDER = 'flixhq';
+
+async function consumetFetch(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Consumet error ' + r.status);
+  return r.json();
+}
+
+async function openMedia(type, id, title) {
+  const d = decodeURIComponent(title);
+  document.getElementById('sp-title').textContent = d;
+  document.getElementById('sp-sub').textContent = 'Loading servers...';
+  document.getElementById('sp-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><div class="spinner" style="margin:0 auto 12px"></div><span>Fetching streams...</span></div>';
+  document.getElementById('streamPicker').classList.add('show');
+
+  try {
+    const search = await consumetFetch(`${CONSUMET_BASE}/movies/${CONSUMET_PROVIDER}/search?query=${encodeURIComponent(d)}`);
+    const results = search.results || [];
+    const expectedType = type === 'movie' ? 'Movie' : 'TV';
+    const item = results.find(r => r.type === expectedType) || results[0];
+    if (!item) throw new Error('No match on Consumet');
+
+    const info = await consumetFetch(`${CONSUMET_BASE}/movies/${CONSUMET_PROVIDER}/info?id=${encodeURIComponent(item.id)}`);
+    const episodes = info.episodes || [];
+    let episodeId;
+    if (type === 'movie') {
+      episodeId = episodes[0]?.id;
+    } else {
+      const s1e1 = episodes.find(e => (e.season === 1 || e.season === '1') && (e.episode === 1 || e.episode === '1')) || episodes[0];
+      episodeId = s1e1?.id;
+    }
+    if (!episodeId) throw new Error('No episode found');
+
+    const servers = await consumetFetch(`${CONSUMET_BASE}/movies/${CONSUMET_PROVIDER}/servers?episodeId=${encodeURIComponent(episodeId)}&mediaId=${encodeURIComponent(item.id)}`);
+    if (!servers || !servers.length) throw new Error('No servers');
+
+    document.getElementById('sp-sub').textContent = `${servers.length} servers available`;
+    let listHtml = '';
+    for (const s of servers) {
+      const sn = s.serverName.replace(/'/g, "\\'");
+      const ei = episodeId.replace(/'/g, "\\'");
+      const mi = item.id.replace(/'/g, "\\'");
+      const dn = d.replace(/'/g, "\\'");
+      listHtml += `<button class="stream-opt" onclick="consumetPlay('${ei}','${mi}','${sn}','${dn}')">
+        <span>${s.name || s.serverName}</span>
+        <span class="hd-badge">HD</span>
+      </button>`;
+    }
+    document.getElementById('sp-list').innerHTML = listHtml;
+  } catch (e) {
+    console.warn('Consumet failed, using fallback:', e.message);
+    // Fall back to hardcoded embed servers
+    const servers = MEDIA_SERVERS.map(s => ({
+      ...s,
+      url: type === 'movie' ? s.movie(id) : s.tv(id, 1, 1),
+    }));
+    document.getElementById('sp-sub').textContent = `${servers.length} servers available (fallback)`;
+    let listHtml = '';
+    for (const s of servers) {
+      const fmt = type === 'movie' ? 'Movie' : 'TV';
+      listHtml += `<button class="stream-opt" onclick="closeStreamPicker();openPlayer('${s.url.replace(/'/g,"\\'")}','${d.replace(/'/g,"\\'")}','${fmt}')">
+        <span>${s.name}</span>
+        <span class="hd-badge">${s.quality}</span>
+      </button>`;
+    }
+    document.getElementById('sp-list').innerHTML = listHtml;
+  }
+}
+
+async function consumetPlay(episodeId, mediaId, server, title) {
+  closeStreamPicker();
+  try {
+    const watch = await consumetFetch(`${CONSUMET_BASE}/movies/${CONSUMET_PROVIDER}/watch?episodeId=${encodeURIComponent(episodeId)}&mediaId=${encodeURIComponent(mediaId)}&server=${encodeURIComponent(server)}`);
+    const sources = watch.sources || [];
+    const m3u8 = sources.find(s => s.quality === 'auto' || s.isM3U8) || sources[0];
+    if (m3u8?.url) {
+      openPlayer(m3u8.url, title, server + ' (' + (m3u8.quality || 'HD') + ')');
+    } else {
+      throw new Error('No playable source found');
+    }
+  } catch (e) {
+    alert('Failed to load stream: ' + e.message);
+  }
+}
+
 const MEDIA_SERVERS = [
   { name: 'VidSync',   movie: id => `https://vidsync.live/embed/movie/${id}?autoPlay=true`,            tv: (id,s,e) => `https://vidsync.live/embed/tv/${id}/${s}/${e}?autoPlay=true&autoNext=true`, quality: '1080p' },
   { name: 'VidSrc',    movie: id => `https://vidsrc.to/embed/movie/${id}`,                            tv: (id,s,e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,                          quality: '1080p' },
@@ -762,38 +850,46 @@ const MEDIA_SERVERS = [
   { name: 'Embed SU',  movie: id => `https://embed.su/embed/movie/${id}`,                            tv: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}`,                                 quality: '1080p' },
 ];
 
-function openMedia(type, id, title) {
-  const d = decodeURIComponent(title);
-  const servers = MEDIA_SERVERS.map(s => ({
-    ...s,
-    url: type === 'movie' ? s.movie(id) : s.tv(id, 1, 1),
-  }));
-  document.getElementById('sp-title').textContent = d;
-  document.getElementById('sp-sub').textContent = `${servers.length} servers available`;
-  let listHtml = '';
-  for (const s of servers) {
-    const fmt = type === 'movie' ? 'Movie' : 'TV';
-    listHtml += `<button class="stream-opt" onclick="closeStreamPicker();openPlayer('${s.url.replace(/'/g,"\\'")}','${d.replace(/'/g,"\\'")}','${fmt}')">
-      <span>${s.name}</span>
-      <span class="hd-badge">${s.quality}</span>
-    </button>`;
-  }
-  document.getElementById('sp-list').innerHTML = listHtml;
-  document.getElementById('streamPicker').classList.add('show');
-}
-
 function openPlayer(url, title, desc) {
-  const frame = document.getElementById('playerFrame');
-  frame.src = url;
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
+  const frame = document.getElementById('playerFrame');
+  const video = document.getElementById('hlsPlayer');
+  if (url.includes('.m3u8')) {
+    frame.style.display = 'none';
+    video.style.display = 'block';
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      if (video._hls) video._hls.destroy();
+      const hls = new Hls();
+      video._hls = hls;
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.play();
+    } else {
+      frame.style.display = 'block';
+      video.style.display = 'none';
+      frame.src = url;
+    }
+  } else {
+    video.style.display = 'none';
+    video.pause(); video.src = '';
+    frame.style.display = 'block';
+    frame.src = url;
+    setTimeout(() => frame.removeAttribute('sandbox'), 100);
+  }
   document.getElementById('playerModal').classList.add('show');
-  // Ensure sandbox is always removed (streamed.pk rejects it)
-  setTimeout(() => frame.removeAttribute('sandbox'), 100);
 }
 
 function closePlayer() {
   document.getElementById('playerFrame').src = '';
+  document.getElementById('playerFrame').style.display = 'block';
+  const video = document.getElementById('hlsPlayer');
+  video.pause(); video.src = '';
+  if (video._hls) { video._hls.destroy(); video._hls = null; }
+  video.style.display = 'none';
   document.getElementById('playerModal').classList.remove('show');
 }
 document.getElementById('playerModal').addEventListener('click', function(e) { if (e.target === this) closePlayer(); });
@@ -1086,7 +1182,10 @@ const CUSTOM_LOGOS = {
   'bbc three': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-three-uk.png',
   'bbc four': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-four-uk.png',
   'bbc news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-news-uk.png',
+  'bbc news hd': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-news-uk.png',
+  'bbc news uk': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-news-uk.png',
   'bbc world news': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-world-news-uk.png',
+  'bbc world': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-world-news-uk.png',
   'bbc parliament': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-parliament-uk.png',
   'bbc alba': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-alba-uk.png',
   'bbc scotland': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-scotland-uk.png',
@@ -1118,6 +1217,19 @@ async function loadTVChannels() {
     channelLogoMap = logoR;
     const data = await r.json();
     allChannels = data.channels || [];
+    // Inject custom channels not in the CDN listing
+    const CUSTOM_CHANNELS = [
+      { name: 'BBC News', code: 'gb', status: 'online', _custom: true },
+      { name: 'BBC World News', code: 'gb', status: 'online', _custom: true },
+      { name: 'BBC World', code: 'gb', status: 'online', _custom: true },
+      { name: 'BBC News HD', code: 'gb', status: 'online', _custom: true },
+      { name: 'BBC News UK', code: 'gb', status: 'online', _custom: true },
+    ];
+    for (const cc of CUSTOM_CHANNELS) {
+      if (!allChannels.some(c => c.name.toLowerCase() === cc.name.toLowerCase())) {
+        allChannels.push(cc);
+      }
+    }
     const countries = [...new Set(allChannels.map(c => c.code).filter(Boolean))].sort();
     const pills = document.getElementById('tv-country-pills');
     pills.innerHTML = `<span class="pill active" data-code="all" onclick="setCountryPill('all',this)">All</span>`;
