@@ -850,32 +850,38 @@ const MEDIA_SERVERS = [
   { name: 'Embed SU',  movie: id => `https://embed.su/embed/movie/${id}`,                            tv: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}`,                                 quality: '1080p' },
 ];
 
+function isMediaUrl(url) {
+  const ext = url.split('?')[0].split('#')[0].toLowerCase();
+  if (ext.endsWith('.m3u8') || ext.endsWith('.ts') || ext.endsWith('.mp4') || ext.endsWith('.mkv') || ext.endsWith('.webm') || ext.endsWith('.mpd')) return true;
+  if (ext.endsWith('.php') || ext.endsWith('.html') || ext.endsWith('.htm') || ext.endsWith('.asp') || ext.endsWith('.aspx')) return false;
+  if (url.match(/:\d+\/(live|playlist|chunk|seg|stream)/i)) return true;
+  if (url.match(/\/\d{4,}$/)) return true;
+  return false;
+}
 function openPlayer(url, title, desc) {
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
   const frame = document.getElementById('playerFrame');
   const video = document.getElementById('hlsPlayer');
-  if (url.includes('.m3u8')) {
+  if (url.includes('.m3u8') || isMediaUrl(url)) {
     frame.style.display = 'none';
     video.style.display = 'block';
-    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+    video.removeAttribute('src');
+    if (url.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
       if (video._hls) video._hls.destroy();
       const hls = new Hls();
       video._hls = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-      video.play();
     } else {
-      frame.style.display = 'block';
-      video.style.display = 'none';
-      frame.src = url;
+      video.src = url;
+      video.play().catch(() => {});
     }
   } else {
     video.style.display = 'none';
     video.pause(); video.src = '';
+    if (video._hls) { video._hls.destroy(); video._hls = null; }
     frame.style.display = 'block';
     frame.src = url;
     setTimeout(() => frame.removeAttribute('sandbox'), 100);
