@@ -866,30 +866,75 @@ function openPlayer(url, title, desc) {
   const frame = document.getElementById('playerFrame');
   const video = document.getElementById('hlsPlayer');
   if (video._hls) { video._hls.destroy(); video._hls = null; }
-  if (url.includes('.m3u8') || isMediaUrl(url)) {
-    frame.style.display = 'none';
-    video.style.display = 'block';
-    video.removeAttribute('src');
-    if (url.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
-      const src = (location.protocol === 'https:' && url.startsWith('http://')) ? CORS_PROXY + encodeURIComponent(url) : url;
-      const hls = new Hls({ manifestLoadingTimeOut: 10000, levelLoadingTimeOut: 10000 });
-      video._hls = hls;
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      hls.on(Hls.Events.ERROR, (e, data) => { if (data.fatal) { hls.destroy(); video._hls = null; document.getElementById('playerError').style.display = 'block'; } });
-    } else {
-      video.src = url;
-      video.load();
-      video.play().catch(() => {});
-      video.onerror = () => document.getElementById('playerError').style.display = 'block';
-    }
-  } else {
+  if (video._tm) { clearTimeout(video._tm); video._tm = null; }
+  video._doneTimeout = false;
+
+  const isM3U8 = url.includes('.m3u8');
+  const isMedia = isM3U8 || isMediaUrl(url);
+  const isPlaying = () => video.videoWidth > 0 || video.currentTime > 0;
+
+  function setErrTimeout(ms) {
+    video._tm = setTimeout(() => { video._doneTimeout = true; if (!isPlaying()) document.getElementById('playerError').style.display = 'block'; }, ms);
+  }
+  function proxyUrl(u) {
+    return (location.protocol === 'https:' && u.startsWith('http://')) ? CORS_PROXY + encodeURIComponent(u) : u;
+  }
+
+  if (!isMedia) {
     video.style.display = 'none';
     video.pause(); video.src = '';
     frame.style.display = 'block';
     frame.src = url;
-    setTimeout(() => frame.removeAttribute('sandbox'), 100);
+  } else {
+    frame.style.display = 'none';
+    video.style.display = 'block';
+    video.removeAttribute('src');
+
+    // Clear timeout when video starts playing
+    const onStart = () => { if (video._tm) { clearTimeout(video._tm); video._tm = null; } };
+    video.addEventListener('playing', onStart, { once: true });
+    video.addEventListener('error', onStart, { once: true });
+
+    if (isM3U8 && typeof Hls !== 'undefined' && Hls.isSupported()) {
+      // .m3u8: HLS.js first, fallback to native video
+      const hls = new Hls({ manifestLoadingTimeOut: 15000, levelLoadingTimeOut: 15000, fragLoadingTimeOut: 15000 });
+      video._hls = hls;
+      hls.loadSource(proxyUrl(url));
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal) {
+          hls.destroy(); video._hls = null;
+          if (!video._doneTimeout) {
+            video.src = url; video.load(); video.play().catch(() => {});
+            setErrTimeout(15000);
+          }
+        }
+      });
+    } else {
+      // .ts / raw streams: native video first
+      video.src = url;
+      video.load();
+      video.play().catch(() => {});
+      // HLS.js fallback after 3.5s if native doesn't play
+      if (typeof Hls !== 'undefined' && Hls.isSupported() && !isM3U8) {
+        video._tm = setTimeout(() => {
+          if (!isPlaying() && !video._hls) {
+            const hls = new Hls({ manifestLoadingTimeOut: 15000, levelLoadingTimeOut: 15000, fragLoadingTimeOut: 15000 });
+            video._hls = hls;
+            hls.loadSource(proxyUrl(url));
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            hls.on(Hls.Events.ERROR, (e, data) => {
+              if (data.fatal) { hls.destroy(); video._hls = null; document.getElementById('playerError').style.display = 'block'; }
+            });
+          }
+        }, 3500);
+      } else {
+        setErrTimeout(15000);
+      }
+      video.onerror = () => { if (!video._hls) { document.getElementById('playerError').style.display = 'block'; } };
+    }
   }
   document.getElementById('playerModal').classList.add('show');
 }
@@ -1335,12 +1380,9 @@ const CUSTOM_CHANNEL_URLS = {};
 function openTVChannel(name, code) {
   const decoded = decodeURIComponent(name);
   const custom = CUSTOM_CHANNEL_URLS[decoded];
-  if (custom) { openPlayer(custom.url, decoded, 'Live TV', custom.sandbox); return; }
+  if (custom) { openPlayer(custom.url, decoded, 'Live TV'); return; }
   const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
-  fetch(url).then(r => r.text()).then(html => {
-    const patched = html.replace('maxBufferLength:30','maxBufferLength:120').replace('maxMaxBufferLength:60','maxMaxBufferLength:300');
-    openPlayer(URL.createObjectURL(new Blob([patched],{type:'text/html'})), decoded, 'Live TV');
-  }).catch(() => openPlayer(url, decoded, 'Live TV'));
+  openPlayer(url, decoded, 'Live TV');
 }
 
 loadMovieHome();
