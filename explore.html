@@ -859,42 +859,41 @@ function isMediaUrl(url) {
   if (url.match(/\/\d{4,}$/)) return true;
   return false;
 }
-function proxyUrl(u) {
-  return (location.protocol === 'https:' && u.startsWith('http://')) ? CORS_PROXY + encodeURIComponent(u) : u;
-}
 function openPlayer(url, title, desc) {
   document.getElementById('playerTitle').textContent = title || 'Now Playing';
   document.getElementById('playerDesc').textContent = desc || '';
+  document.getElementById('playerError').style.display = 'none';
   const frame = document.getElementById('playerFrame');
   const video = document.getElementById('hlsPlayer');
-  const errEl = document.getElementById('playerError');
-  errEl.style.display = 'none';
+  if (video._hls) { video._hls.destroy(); video._hls = null; }
   if (url.includes('.m3u8') || isMediaUrl(url)) {
     frame.style.display = 'none';
     video.style.display = 'block';
     video.removeAttribute('src');
-    if (video._hls) { video._hls.destroy(); video._hls = null; }
+    // Try native <video> first — handles .ts, raw HTTP streams, and works with mixed content
+    video.src = url;
+    video.load();
+    video.play().catch(() => {});
+    // If it doesn't play in 3s, try HLS.js via CORS proxy (handles HLS without .m3u8 extension)
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-      const hls = new Hls();
-      video._hls = hls;
-      hls.loadSource(proxyUrl(url));
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-      hls.on(Hls.Events.ERROR, (e, data) => {
-        if (data.fatal) {
-          hls.destroy(); video._hls = null;
-          // Fallback: try native video with direct URL (works for .ts on Safari/Chrome)
-          video.src = url; video.load(); video.play().catch(() => errEl.style.display = 'block');
+      const proxySrc = (location.protocol === 'https:' && url.startsWith('http://')) ? CORS_PROXY + encodeURIComponent(url) : url;
+      setTimeout(() => {
+        if (!video.videoWidth && video.currentTime === 0 && !video._hls) {
+          const hls = new Hls({ manifestLoadingTimeOut: 8000, levelLoadingTimeOut: 8000, fragLoadingTimeOut: 8000 });
+          video._hls = hls;
+          hls.loadSource(proxySrc);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+          hls.on(Hls.Events.ERROR, (e, data) => {
+            if (data.fatal) { hls.destroy(); video._hls = null; }
+          });
         }
-      });
-    } else {
-      video.src = url; video.load(); video.play().catch(() => errEl.style.display = 'block');
+      }, 3000);
     }
-    video.onerror = () => errEl.style.display = 'block';
+    video.onerror = () => { if (!video._hls) document.getElementById('playerError').style.display = 'block'; };
   } else {
     video.style.display = 'none';
     video.pause(); video.src = '';
-    if (video._hls) { video._hls.destroy(); video._hls = null; }
     frame.style.display = 'block';
     frame.src = url;
     setTimeout(() => frame.removeAttribute('sandbox'), 100);
