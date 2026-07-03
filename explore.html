@@ -1269,21 +1269,13 @@ async function loadTVChannels() {
   const el = document.getElementById('tv-content');
   el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading channels...</span></div>';
   try {
-    const [r, logoR, customR] = await Promise.all([
+    const [r, logoR] = await Promise.all([
       fetch(`${CDNTV}/channels/?user=cdnlivetv&plan=free`),
       fetch(`${JARUBA_LOGOS}/logo_paths.json`).then(r => r.json()).catch(() => ({})),
-      fetch(`custom_channels.json`).then(r => r.json()).catch(() => ({ channels: [] })),
     ]);
     channelLogoMap = logoR;
     const data = await r.json();
     allChannels = data.channels || [];
-    const customData = customR.channels || [];
-    for (const cc of customData) {
-      if (!allChannels.some(c => c.name.toLowerCase() === cc.name.toLowerCase())) {
-        allChannels.push({ name: cc.name, code: cc.code || 'us', status: cc.status || 'online', _custom: true });
-      }
-      CUSTOM_CHANNEL_URLS[cc.name] = { url: cc.url };
-    }
     const countries = [...new Set(allChannels.map(c => c.code).filter(Boolean))].sort();
     const pills = document.getElementById('tv-country-pills');
     pills.innerHTML = `<span class="pill active" data-code="all" onclick="setCountryPill('all',this)">All</span>`;
@@ -1375,12 +1367,8 @@ function renderChannels() {
   el.innerHTML = html;
 }
 
-const CUSTOM_CHANNEL_URLS = {};
-
 function openTVChannel(name, code) {
   const decoded = decodeURIComponent(name);
-  const custom = CUSTOM_CHANNEL_URLS[decoded];
-  if (custom) { openPlayer(custom.url, decoded, 'Live TV'); return; }
   const url = `https://cdnlivetv.tv/api/v1/channels/player/?name=${encodeURIComponent(decoded.toLowerCase())}&code=${code}&user=cdnlivetv&plan=free`;
   openPlayer(url, decoded, 'Live TV');
 }
